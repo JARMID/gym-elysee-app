@@ -1,0 +1,99 @@
+name: gyelyseedz
+description: "GYM ÉLYSÉE DZ - Application mobile pour chaîne de salles de sport premium algérienne"
+publish_to: "none"
+
+version: 1.0.1+2
+
+environment:
+  sdk: ^3.10.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
+  # Navigation
+  go_router: ^13.2.0
+
+  # API & Networking
+  dio: ^5.4.1
+  pretty_dio_logger: ^1.3.1
+  retrofit: ^4.1.0
+  json_annotation: ^4.9.0
+
+  # Storage
+  flutter_secure_storage: ^9.0.0
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  shared_preferences: ^2.2.2
+
+  # UI/UX
+  google_fonts: ^6.1.0
+  flutter_svg: ^2.0.10+1
+  lottie: ^3.1.0
+  shimmer: ^3.0.0
+  cached_network_image: ^3.3.1
+  flutter_screenutil: ^5.9.0
+
+  # QR Code
+  mobile_scanner: ^4.0.1
+  qr_flutter: ^4.1.0
+  screen_brightness: ^0.2.1
+
+  # Date/Time
+  intl: any
+  table_calendar: ^3.0.9
+  timeago: ^3.7.0
+
+  # Media
+  image_picker: ^1.0.7
+  video_player: ^2.8.2
+  chewie: ^1.8.0
+  file_picker: ^8.0.0
+
+  # Charts & Visualization
+  fl_chart: ^0.66.2
+
+  # Payments
+  webview_flutter: ^4.5.0
+
+  # Utils
+  url_launcher: ^6.2.4
+  share_plus: ^7.2.2
+  connectivity_plus: ^5.0.2
+  equatable: ^2.0.5
+  freezed_annotation: ^2.4.1
+  uuid: ^4.3.3
+
+  # Icons
+  cupertino_icons: ^1.0.8
+  font_awesome_flutter: ^10.7.0
+  animate_do: ^4.2.0
+  visibility_detector: ^0.4.0+2
+  mime: ^1.0.6
+  http_parser: ^4.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.8
+  riverpod_generator: ^2.4.0
+  json_serializable: ^6.7.1
+  retrofit_generator: ^8.2.1
+  freezed: ^2.4.7
+  hive_generator: ^2.0.1
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  assets:
+    - assets/images/
+    - assets/animations/
+    - assets/icons/

@@ -1,0 +1,5 @@
+Analyzing gyelyseedz...                                         
+
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\admin\admin_dashboard_screen.dart:69:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\admin\admin_dashboard_screen.dart:112:38 - deprecated_member_use
+
