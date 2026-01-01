@@ -158,7 +158,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 return SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final post = posts[index];
-                    return _buildPostCard(post, user?.id ?? 0);
+                    return _buildPostCard(post, user?.id ?? '');
                   }, childCount: posts.length),
                 );
               },
@@ -178,7 +178,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     );
   }
 
-  Widget _buildPostCard(Map<String, dynamic> apiPost, int currentUserId) {
+  Widget _buildPostCard(Map<String, dynamic> apiPost, String currentUserId) {
     // Map API data to UI
     final userObj = apiPost['user'] ?? {};
     final userName =
