@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import '../../core/errors/exceptions.dart';
 import '../models/branch_model.dart';
