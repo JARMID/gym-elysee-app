@@ -11,6 +11,8 @@ import 'core/theme/app_theme.dart';
 import 'core/routing/app_router.dart';
 import 'data/services/api_service.dart';
 import 'data/services/storage_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/config/supabase_constants.dart';
 import 'data/repositories/auth_repository.dart';
 import 'presentation/providers/auth_provider.dart';
 import 'presentation/providers/branch_provider.dart';
@@ -27,6 +29,20 @@ void main() async {
   final secureStorage = const FlutterSecureStorage();
   final prefs = await SharedPreferences.getInstance();
   final storageService = StorageService(secureStorage, prefs);
+
+  // Initialize Supabase
+  if (SupabaseConstants.url == 'YOUR_SUPABASE_URL') {
+    debugPrint(
+      '⚠️ WARNING: Supabase keys not set. Please update lib/core/config/supabase_constants.dart',
+    );
+  } else {
+    await Supabase.initialize(
+      url: SupabaseConstants.url,
+      anonKey: SupabaseConstants.anonKey,
+    );
+  }
+
+  // TODO: Migration - ApiService will be replaced by SupabaseClient
   final apiService = ApiService(storageService);
   final authRepository = AuthRepository(apiService, storageService);
 
