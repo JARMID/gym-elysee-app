@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import '../../core/errors/exceptions.dart';
 import '../models/user_model.dart';
@@ -157,5 +158,107 @@ class AuthRepository {
   Future<bool> isAuthenticated() async {
     final session = sb.Supabase.instance.client.auth.currentSession;
     return session != null;
+  }
+
+  /// Update user profile data (name, phone, bio, etc.)
+  Future<UserModel> updateProfile({
+    String? firstName,
+    String? lastName,
+    String? phone,
+    String? gender,
+    String? bio,
+    DateTime? birthDate,
+  }) async {
+    final user = sb.Supabase.instance.client.auth.currentUser;
+    if (user == null) throw const AuthException();
+
+    try {
+      final updates = <String, dynamic>{};
+      if (firstName != null) updates['first_name'] = firstName;
+      if (lastName != null) updates['last_name'] = lastName;
+      if (phone != null) updates['phone'] = phone;
+      if (gender != null) updates['gender'] = gender;
+      if (bio != null) updates['bio'] = bio;
+      if (birthDate != null)
+        updates['birth_date'] = birthDate.toIso8601String().split('T').first;
+
+      await sb.Supabase.instance.client
+          .from('profiles')
+          .update(updates)
+          .eq('id', user.id);
+
+      // Fetch and return updated profile
+      return getCurrentUser();
+    } catch (e) {
+      throw const ServerException();
+    }
+  }
+
+  /// Upload or replace user avatar
+  /// [imageBytes] - The image data as Uint8List (from image_picker or file)
+  /// [fileExtension] - File extension like 'jpg', 'png'
+  /// Returns the public URL of the uploaded avatar
+  Future<String> uploadAvatar(
+    Uint8List imageBytes,
+    String fileExtension,
+  ) async {
+    final user = sb.Supabase.instance.client.auth.currentUser;
+    if (user == null) throw const AuthException();
+
+    try {
+      final storagePath = '${user.id}/avatar.$fileExtension';
+
+      // Upload with upsert to replace existing
+      await sb.Supabase.instance.client.storage
+          .from('avatars')
+          .uploadBinary(
+            storagePath,
+            imageBytes,
+            fileOptions: const sb.FileOptions(upsert: true),
+          );
+
+      // Get public URL
+      final publicUrl = sb.Supabase.instance.client.storage
+          .from('avatars')
+          .getPublicUrl(storagePath);
+
+      // Update profile with new avatar URL
+      await sb.Supabase.instance.client
+          .from('profiles')
+          .update({'avatar_url': publicUrl})
+          .eq('id', user.id);
+
+      return publicUrl;
+    } catch (e) {
+      throw const ServerException();
+    }
+  }
+
+  /// Delete user's avatar from storage and clear profile reference
+  Future<void> deleteAvatar() async {
+    final user = sb.Supabase.instance.client.auth.currentUser;
+    if (user == null) throw const AuthException();
+
+    try {
+      // List files in user's avatar folder and delete them
+      final files = await sb.Supabase.instance.client.storage
+          .from('avatars')
+          .list(path: user.id);
+
+      if (files.isNotEmpty) {
+        final filePaths = files.map((f) => '${user.id}/${f.name}').toList();
+        await sb.Supabase.instance.client.storage
+            .from('avatars')
+            .remove(filePaths);
+      }
+
+      // Clear avatar_url in profile
+      await sb.Supabase.instance.client
+          .from('profiles')
+          .update({'avatar_url': null})
+          .eq('id', user.id);
+    } catch (e) {
+      throw const ServerException();
+    }
   }
 }
