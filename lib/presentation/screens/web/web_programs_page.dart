@@ -31,9 +31,14 @@ class WebProgramsPage extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context, bool isDark) {
+    final isMobile = MediaQuery.of(context).size.width < 900;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 24),
+      padding: EdgeInsets.symmetric(
+        vertical: isMobile ? 40 : 80,
+        horizontal: 24,
+      ),
       child: Column(
         children: [
           Text(
@@ -50,7 +55,7 @@ class WebProgramsPage extends StatelessWidget {
             textAlign: TextAlign.center,
             text: TextSpan(
               style: GoogleFonts.oswald(
-                fontSize: 56,
+                fontSize: isMobile ? 36 : 56,
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : Colors.black,
                 height: 1.1,
@@ -61,7 +66,7 @@ class WebProgramsPage extends StatelessWidget {
                   child: Text(
                     "DISCIPLINE",
                     style: GoogleFonts.oswald(
-                      fontSize: 56,
+                      fontSize: isMobile ? 36 : 56,
                       fontWeight: FontWeight.bold,
                       color: AppColors.brandOrange,
                       height: 1.1,

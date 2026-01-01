@@ -10,12 +10,14 @@ import '../../providers/admin_provider.dart';
 import '../../widgets/admin/add_member_dialog.dart';
 import '../../widgets/admin/pending_payments_dialog.dart';
 import '../../widgets/admin/create_post_dialog.dart';
+import '../../widgets/admin/admin_search_widget.dart';
 import 'admin_members_screen.dart';
 import 'admin_coaches_screen.dart';
 import 'admin_programs_screen.dart';
 import 'admin_branches_screen.dart';
 import 'admin_payments_screen.dart';
 import 'admin_settings_screen.dart';
+import 'admin_analytics_screen.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -27,17 +29,16 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
 
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   int _selectedIndex = 0;
-  final TextEditingController _searchController = TextEditingController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void dispose() {
-    _searchController.dispose();
     super.dispose();
   }
 
   List<Map<String, dynamic>> _getMenuItems(AppLocalizations l10n) => [
     {'icon': FontAwesomeIcons.chartLine, 'label': l10n.adminNavDashboard},
+    {'icon': FontAwesomeIcons.chartSimple, 'label': 'Analytics'},
     {'icon': FontAwesomeIcons.users, 'label': l10n.adminNavMembers},
     {'icon': FontAwesomeIcons.userTie, 'label': l10n.adminNavCoaches},
     {'icon': FontAwesomeIcons.dumbbell, 'label': l10n.adminNavPrograms},
@@ -53,16 +54,18 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       case 0:
         return 'Dashboard';
       case 1:
-        return 'Members';
+        return 'Analytics';
       case 2:
-        return 'Coaches';
+        return 'Members';
       case 3:
-        return 'Programs';
+        return 'Coaches';
       case 4:
-        return 'Branches';
+        return 'Programs';
       case 5:
-        return 'Payments';
+        return 'Branches';
       case 6:
+        return 'Payments';
+      case 7:
         return 'Settings';
       default:
         return 'Admin';
@@ -149,33 +152,55 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       children: [
         // Logo Area
         Container(
-          height: 70,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          height: 80,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  gradient: AppColors.fieryGradient,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Center(
-                  child: FaIcon(
-                    FontAwesomeIcons.dumbbell,
-                    color: Colors.white,
-                    size: 20,
+              SizedBox(
+                height: 56,
+                width: 56,
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    decoration: BoxDecoration(
+                      gradient: AppColors.fieryGradient,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Center(
+                      child: FaIcon(
+                        FontAwesomeIcons.dumbbell,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
                   ),
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                'GYM ÉLYSÉE',
-                style: GoogleFonts.oswald(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87,
-                  letterSpacing: 1,
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'GYM ÉLYSÉE',
+                      style: GoogleFonts.oswald(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black87,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    Text(
+                      'Admin Panel',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: AppColors.brandOrange,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -331,7 +356,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   Widget _buildHeader(bool isDark, bool showHamburger) {
     return Container(
       height: 70,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: EdgeInsets.symmetric(horizontal: showHamburger ? 12 : 24),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF111111) : Colors.white,
         border: Border(
@@ -353,7 +378,25 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               ),
               onPressed: () => _scaffoldKey.currentState?.openDrawer(),
             ),
-            const SizedBox(width: 8),
+            // Mobile Logo
+            GestureDetector(
+              onTap: () => context.go('/'),
+              child: SizedBox(
+                height: 40,
+                width: 40,
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => ShaderMask(
+                    blendMode: BlendMode.srcIn,
+                    shaderCallback: (bounds) =>
+                        AppColors.fieryGradient.createShader(bounds),
+                    child: const FaIcon(FontAwesomeIcons.dumbbell, size: 24),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
           ],
 
           // Title
@@ -361,7 +404,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             child: Text(
               _getMenuTitle(_selectedIndex),
               style: GoogleFonts.oswald(
-                fontSize: 24,
+                fontSize: showHamburger ? 18 : 24,
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : Colors.black87,
               ),
@@ -369,57 +412,17 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             ),
           ),
 
-          // Search (Hidden on small mobile if needed, or collapsed)
-          if (!showHamburger) // Hide search bar directly on mobile to save space
-            Container(
-              width: 300,
-              height: 44,
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.1)
-                      : Colors.grey.shade300,
-                ),
-              ),
-              child: Row(
-                children: [
-                  const SizedBox(width: 14),
-                  Icon(Icons.search, size: 20, color: Colors.grey.shade500),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'Search...',
-                        hintStyle: GoogleFonts.inter(
-                          fontSize: 14,
-                          color: Colors.grey.shade500,
-                        ),
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                ],
-              ),
-            ),
-          const SizedBox(width: 16),
+          if (!showHamburger) AdminSearchWidget(isDark: isDark),
+          if (!showHamburger) const SizedBox(width: 16),
 
           // Notifications
           Stack(
             children: [
               IconButton(
-                icon: const FaIcon(FontAwesomeIcons.bell, size: 20),
+                icon: FaIcon(
+                  FontAwesomeIcons.bell,
+                  size: showHamburger ? 18 : 20,
+                ),
                 color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
                 onPressed: () {},
               ),
@@ -447,16 +450,18 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       case 0:
         return _buildDashboardOverview(l10n, isDark, maxWidth);
       case 1:
-        return const AdminMembersScreen();
+        return const AdminAnalyticsScreen();
       case 2:
-        return const AdminCoachesScreen();
+        return const AdminMembersScreen();
       case 3:
-        return const AdminProgramsScreen();
+        return const AdminCoachesScreen();
       case 4:
-        return const AdminBranchesScreen();
+        return const AdminProgramsScreen();
       case 5:
-        return const AdminPaymentsScreen();
+        return const AdminBranchesScreen();
       case 6:
+        return const AdminPaymentsScreen();
+      case 7:
         return const AdminSettingsScreen();
       default:
         return const SizedBox();

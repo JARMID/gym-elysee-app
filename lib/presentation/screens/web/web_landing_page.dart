@@ -19,6 +19,7 @@ import '../../widgets/web/web_branches_section.dart';
 import '../../widgets/web/web_transformations_section.dart';
 import '../../widgets/web/web_download_app_section.dart';
 import 'mobile_landing_page.dart';
+import '../../widgets/web/web_back_to_top_fab.dart';
 
 /// Platform-aware landing page wrapper
 /// Shows desktop-optimized web version on browsers
@@ -136,6 +137,9 @@ class _DesktopWebLandingPageState
             ),
           ),
         ],
+      ),
+      floatingActionButton: WebBackToTopFAB(
+        scrollController: _scrollController,
       ),
     );
   }

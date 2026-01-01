@@ -32,6 +32,9 @@ class _WebPricingPageSectionState extends State<WebPricingPageSection> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 800; // Breakpoint for pricing page
+
     // Clearing controllers on rebuild is important if strict manual management is needed,
     // but here we just append. To avoid duplicates if rebuilt, we can clear.
     _controllers.clear();
@@ -40,7 +43,10 @@ class _WebPricingPageSectionState extends State<WebPricingPageSection> {
       key: const Key('pricing-page-section'),
       onVisibilityChanged: _onVisibilityChanged,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 40),
+        padding: EdgeInsets.symmetric(
+          vertical: 80,
+          horizontal: isMobile ? 20 : 40,
+        ),
         child: Column(
           children: [
             // Header
@@ -53,7 +59,7 @@ class _WebPricingPageSectionState extends State<WebPricingPageSection> {
                     l10n.pricingTitleFirst,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.oswald(
-                      fontSize: 72,
+                      fontSize: isMobile ? 48 : 72,
                       fontWeight: FontWeight.bold,
                       color: AppColors.gold,
                       height: 1.1,
@@ -67,7 +73,7 @@ class _WebPricingPageSectionState extends State<WebPricingPageSection> {
                       l10n.pricingTitleSecond,
                       textAlign: TextAlign.center,
                       style: GoogleFonts.oswald(
-                        fontSize: 72,
+                        fontSize: isMobile ? 48 : 72,
                         fontWeight: FontWeight.bold,
                         height: 1.1,
                       ),
@@ -85,7 +91,7 @@ class _WebPricingPageSectionState extends State<WebPricingPageSection> {
                 l10n.pricingSubtitle,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
-                  fontSize: 18,
+                  fontSize: isMobile ? 16 : 18,
                   color: Theme.of(context).brightness == Brightness.dark
                       ? Colors.grey[400]
                       : Colors.grey[600],
@@ -128,6 +134,7 @@ class _WebPricingPageSectionState extends State<WebPricingPageSection> {
                     isHighlight: false,
                     buttonLabel: l10n.pricingBtnMonthly,
                     delay: 300,
+                    width: isMobile ? double.infinity : 380,
                   ),
                 ),
                 FadeInUp(
@@ -151,6 +158,7 @@ class _WebPricingPageSectionState extends State<WebPricingPageSection> {
                     buttonLabel: l10n.pricingBtnQuarterly,
                     delay: 400,
                     savingsBadge: l10n.pricingSave3k,
+                    width: isMobile ? double.infinity : 380,
                   ),
                 ),
                 FadeInUp(
@@ -177,6 +185,7 @@ class _WebPricingPageSectionState extends State<WebPricingPageSection> {
                     delay: 500,
                     savingsBadge: l10n.pricingSave21k,
                     topBadge: l10n.pricingBestValue,
+                    width: isMobile ? double.infinity : 380,
                   ),
                 ),
               ],
@@ -197,7 +206,7 @@ class _WebPricingPageSectionState extends State<WebPricingPageSection> {
                       Text(
                         "${l10n.pricingCompTitleFirst} ",
                         style: GoogleFonts.oswald(
-                          fontSize: 42,
+                          fontSize: isMobile ? 32 : 42,
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).brightness == Brightness.dark
                               ? Colors.white
@@ -218,7 +227,7 @@ class _WebPricingPageSectionState extends State<WebPricingPageSection> {
                         child: Text(
                           l10n.pricingCompTitleSecond,
                           style: GoogleFonts.oswald(
-                            fontSize: 42,
+                            fontSize: isMobile ? 32 : 42,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -228,106 +237,116 @@ class _WebPricingPageSectionState extends State<WebPricingPageSection> {
                   const SizedBox(height: 60),
 
                   // Comparison Table
-                  Container(
-                    constraints: const BoxConstraints(maxWidth: 900),
-                    child: Table(
-                      columnWidths: const {
-                        0: FlexColumnWidth(2),
-                        1: FlexColumnWidth(1),
-                        2: FlexColumnWidth(1),
-                        3: FlexColumnWidth(1),
-                      },
-                      children: [
-                        // Header Row
-                        TableRow(
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                color:
-                                    Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white.withValues(alpha: 0.1)
-                                    : Colors.black.withValues(alpha: 0.1),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Container(
+                      constraints: BoxConstraints(
+                        minWidth: isMobile ? 600 : 0,
+                        maxWidth: 900,
+                      ),
+                      width: isMobile ? 800 : 900,
+                      child: Table(
+                        columnWidths: const {
+                          0: FlexColumnWidth(2),
+                          1: FlexColumnWidth(1),
+                          2: FlexColumnWidth(1),
+                          3: FlexColumnWidth(1),
+                        },
+                        children: [
+                          // Header Row
+                          TableRow(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white.withValues(alpha: 0.1)
+                                      : Colors.black.withValues(alpha: 0.1),
+                                ),
                               ),
                             ),
+                            children: [
+                              _buildTableHeader(
+                                context,
+                                l10n.compTableFeature,
+                                isFirst: true,
+                              ),
+                              _buildTableHeader(
+                                context,
+                                l10n.pricingPlanMonthly,
+                              ),
+                              _buildTableHeader(
+                                context,
+                                l10n.pricingPlanQuarterly,
+                              ),
+                              _buildTableHeader(
+                                context,
+                                l10n.pricingPlanAnnual,
+                                isHighlight: true,
+                              ),
+                            ],
                           ),
-                          children: [
-                            _buildTableHeader(
-                              context,
-                              l10n.compTableFeature,
-                              isFirst: true,
-                            ),
-                            _buildTableHeader(context, l10n.pricingPlanMonthly),
-                            _buildTableHeader(
-                              context,
-                              l10n.pricingPlanQuarterly,
-                            ),
-                            _buildTableHeader(
-                              context,
-                              l10n.pricingPlanAnnual,
-                              isHighlight: true,
-                            ),
-                          ],
-                        ),
-                        // Data Rows
-                        _buildInteractiveTableRow(
-                          context,
-                          l10n.compMonthlyEquiv,
-                          '8,000 DZD',
-                          '7,000 DZD',
-                          '6,250 DZD',
-                          isPrice: true,
-                        ),
-                        _buildInteractiveTableRow(
-                          context,
-                          l10n.compBranchAccess,
-                          l10n.compValueOneBranch,
-                          l10n.compValueAll,
-                          l10n.compValueAll,
-                        ),
-                        _buildInteractiveTableRow(
-                          context,
-                          l10n.compGroupClasses,
-                          l10n.compValueUnlimited,
-                          l10n.compValueUnlimited,
-                          l10n.compValueUnlimited,
-                        ),
-                        _buildInteractiveTableRow(
-                          context,
-                          l10n.compPrivateSessions,
-                          '0',
-                          '2/trim.',
-                          '5/an',
-                        ),
-                        _buildInteractiveTableRow(
-                          context,
-                          l10n.compFreeGuests,
-                          '0',
-                          '1/mois',
-                          '3/mois',
-                        ),
-                        _buildInteractiveTableRow(
-                          context,
-                          l10n.compBodyAssessment,
-                          '—',
-                          '—',
-                          l10n.compValueQuarterly,
-                        ),
-                        _buildInteractiveTableRow(
-                          context,
-                          l10n.compNutritionPlan,
-                          '—',
-                          '—',
-                          '✓',
-                        ),
-                        _buildInteractiveTableRow(
-                          context,
-                          l10n.comp3xPayment,
-                          '—',
-                          '—',
-                          '✓',
-                        ),
-                      ],
+                          // Data Rows
+                          _buildInteractiveTableRow(
+                            context,
+                            l10n.compMonthlyEquiv,
+                            '8,000 DZD',
+                            '7,000 DZD',
+                            '6,250 DZD',
+                            isPrice: true,
+                          ),
+                          _buildInteractiveTableRow(
+                            context,
+                            l10n.compBranchAccess,
+                            l10n.compValueOneBranch,
+                            l10n.compValueAll,
+                            l10n.compValueAll,
+                          ),
+                          _buildInteractiveTableRow(
+                            context,
+                            l10n.compGroupClasses,
+                            l10n.compValueUnlimited,
+                            l10n.compValueUnlimited,
+                            l10n.compValueUnlimited,
+                          ),
+                          _buildInteractiveTableRow(
+                            context,
+                            l10n.compPrivateSessions,
+                            '0',
+                            '2/trim.',
+                            '5/an',
+                          ),
+                          _buildInteractiveTableRow(
+                            context,
+                            l10n.compFreeGuests,
+                            '0',
+                            '1/mois',
+                            '3/mois',
+                          ),
+                          _buildInteractiveTableRow(
+                            context,
+                            l10n.compBodyAssessment,
+                            '—',
+                            '—',
+                            l10n.compValueQuarterly,
+                          ),
+                          _buildInteractiveTableRow(
+                            context,
+                            l10n.compNutritionPlan,
+                            '—',
+                            '—',
+                            '✓',
+                          ),
+                          _buildInteractiveTableRow(
+                            context,
+                            l10n.comp3xPayment,
+                            '—',
+                            '—',
+                            '✓',
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -650,6 +669,7 @@ class _InteractivePricingCard extends StatefulWidget {
   final int delay;
   final String? savingsBadge;
   final String? topBadge;
+  final double? width;
 
   const _InteractivePricingCard({
     required this.title,
@@ -662,6 +682,7 @@ class _InteractivePricingCard extends StatefulWidget {
     required this.delay,
     this.savingsBadge,
     this.topBadge,
+    this.width,
   });
 
   @override
@@ -689,7 +710,7 @@ class _InteractivePricingCardState extends State<_InteractivePricingCard> {
             transform: Matrix4.identity()
               // ignore: deprecated_member_use
               ..translate(0.0, _isHovered ? -12.0 : 0.0),
-            width: 380,
+            width: widget.width ?? 380,
             constraints: const BoxConstraints(minHeight: 650),
             padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 32),
             decoration: BoxDecoration(

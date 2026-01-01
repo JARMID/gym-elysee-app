@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
+import 'mobile_navigation_sheet.dart';
+
 import '../../../l10n/app_localizations.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -151,10 +153,11 @@ class WebNavBar extends ConsumerWidget {
                 const Spacer(),
 
                 // Action Area
+                // Action Area
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Language Selector
+                    // Language Selector (Always Desktop Style)
                     _AnimatedLanguageButton(ref: ref),
                     const SizedBox(width: 12),
 
@@ -169,15 +172,12 @@ class WebNavBar extends ConsumerWidget {
                         );
                       },
                     ),
-                    const SizedBox(width: 16),
 
-                    // Auth Buttons
+                    // Auth Buttons (Hidden on small screen)
                     if (!isSmallScreen) ...[
-                      // "Join Now" Button (Primary)
+                      const SizedBox(width: 16),
                       _AnimatedCTAButton(label: l10n.navJoin),
                       const SizedBox(width: 12),
-
-                      // "Member Area" Icon Button
                       _AnimatedIconButton(
                         icon: Icons.person_outline,
                         onPressed: () => context.go(AppRoutes.login),
@@ -185,14 +185,10 @@ class WebNavBar extends ConsumerWidget {
                       ),
                     ],
 
-                    // Mobile Menu Button
+                    // Mobile Menu (Visible on small screen)
                     if (isSmallScreen) ...[
                       const SizedBox(width: 16),
-                      _AnimatedIconButton(
-                        icon: Icons.menu,
-                        onPressed: () => _showMobileMenu(context, l10n),
-                        size: 28,
-                      ),
+                      _buildMobileMenu(context, l10n, isDark),
                     ],
                   ],
                 ),
@@ -204,133 +200,40 @@ class WebNavBar extends ConsumerWidget {
     );
   }
 
-  void _showMobileMenu(BuildContext context, AppLocalizations l10n) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF0A0A0A),
-      isScrollControlled: true,
-      builder: (ctx) => SizedBox(
-        height: MediaQuery.of(context).size.height,
-        child: SingleChildScrollView(
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    ShaderMask(
-                      blendMode: BlendMode.srcIn,
-                      shaderCallback: (bounds) =>
-                          AppColors.fieryGradient.createShader(bounds),
-                      child: const FaIcon(FontAwesomeIcons.dumbbell, size: 28),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      onPressed: () => Navigator.pop(ctx),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 40),
-                _buildMobileMenuItem(ctx, l10n.navHome, AppRoutes.splash),
-                _buildMobileMenuItem(
-                  ctx,
-                  l10n.navWorkouts,
-                  AppRoutes.webWorkouts,
-                ),
-                _buildMobileMenuItem(
-                  ctx,
-                  l10n.navChallenge,
-                  AppRoutes.webChallenges,
-                ),
-                _buildMobileMenuItem(
-                  ctx,
-                  l10n.navBranches,
-                  AppRoutes.webBranches,
-                ),
-                _buildMobileMenuItem(
-                  ctx,
-                  l10n.navPricing,
-                  AppRoutes.webPricing,
-                ),
-                _buildMobileMenuItem(
-                  ctx,
-                  l10n.navPartners,
-                  AppRoutes.webPartners,
-                ),
-                _buildMobileMenuItem(ctx, l10n.navBlog, AppRoutes.webBlog),
-                _buildMobileMenuItem(
-                  ctx,
-                  l10n.navContact,
-                  AppRoutes.webContact,
-                ),
-                const SizedBox(height: 24),
-                const Divider(color: Colors.white24),
-                const SizedBox(height: 16),
-                // Auth Section
-                _buildMobileMenuItem(ctx, l10n.navLogin, AppRoutes.login),
-                // Spacers might cause issues in ScrollView if height is not finite,
-                // but since we are in a SizedBox with explicit height from MediaQuery,
-                // we technically shouldn't use Spacer inside SingleChildScrollView.
-                // Instead, let's use a fixed SizedBox for separation or rely on flow.
-                // However, the original code had a Spacer before the join button.
-                // To keep the bottom button at the bottom, we need a different approach if scrolling.
-                // If the content fits, we want it bottom. If it overflows, we want it at the end of scroll.
-                // ConstrainedBox with minHeight constraints can solve this, using IntrinsicHeight or check Flutter docs.
-                // Simplified approach for reliability: just put it at the end of the list with some spacing.
-                const SizedBox(height: 40),
-                // Sign Up / Join Button
-                SizedBox(
-                  width: double.infinity,
-                  child: _AnimatedCTAButton(
-                    label: l10n.navJoin,
-                    isFullWidth: true,
-                  ),
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
+  Widget _buildMobileMenu(
+    BuildContext context,
+    AppLocalizations l10n,
+    bool isDark,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => MobileNavigationSheet(
+            activeRoute: activeRoute,
+            onDismiss: () => Navigator.pop(context),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.black.withValues(alpha: 0.05),
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.black.withValues(alpha: 0.1),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildMobileMenuItem(
-    BuildContext context,
-    String title,
-    String route,
-  ) {
-    final isActive = activeRoute == route;
-    return InkWell(
-      onTap: () {
-        Navigator.pop(context);
-        context.go(route);
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Row(
-          children: [
-            if (isActive)
-              Container(
-                width: 4,
-                height: 24,
-                margin: const EdgeInsets.only(right: 16),
-                decoration: BoxDecoration(
-                  gradient: AppColors.fieryGradient,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            Text(
-              title.toUpperCase(),
-              style: GoogleFonts.oswald(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: isActive ? AppColors.brandOrange : Colors.white,
-              ),
-            ),
-          ],
+        child: Icon(
+          Icons.menu,
+          color: isDark ? Colors.white : Colors.black,
+          size: 24,
         ),
       ),
     );
@@ -464,13 +367,11 @@ class _AnimatedIconButton extends StatefulWidget {
   final IconData icon;
   final VoidCallback onPressed;
   final bool isAccent;
-  final double size;
 
   const _AnimatedIconButton({
     required this.icon,
     required this.onPressed,
     this.isAccent = false,
-    this.size = 20,
   });
 
   @override
@@ -524,7 +425,7 @@ class _AnimatedIconButtonState extends State<_AnimatedIconButton> {
             color: _isHovered && widget.isAccent
                 ? AppColors.brandOrange
                 : iconColor,
-            size: widget.size,
+            size: 20,
           ),
         ),
       ),
@@ -632,9 +533,8 @@ class _AnimatedLanguageButtonState extends State<_AnimatedLanguageButton> {
 
 class _AnimatedCTAButton extends StatefulWidget {
   final String label;
-  final bool isFullWidth;
 
-  const _AnimatedCTAButton({required this.label, this.isFullWidth = false});
+  const _AnimatedCTAButton({required this.label});
 
   @override
   State<_AnimatedCTAButton> createState() => _AnimatedCTAButtonState();
@@ -657,10 +557,7 @@ class _AnimatedCTAButtonState extends State<_AnimatedCTAButton> {
           transform: Matrix4.identity()
             // ignore: deprecated_member_use
             ..translate(0.0, _isHovered ? -3.0 : 0.0),
-          padding: EdgeInsets.symmetric(
-            horizontal: widget.isFullWidth ? 24 : 24,
-            vertical: widget.isFullWidth ? 18 : 14,
-          ),
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           decoration: BoxDecoration(
             gradient: AppColors.fieryGradient,
             borderRadius: BorderRadius.circular(4),

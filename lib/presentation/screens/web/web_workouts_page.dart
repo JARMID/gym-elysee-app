@@ -8,19 +8,20 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/routing/app_router.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../providers/theme_provider.dart';
-import '../../widgets/web/web_nav_bar.dart';
-import '../../widgets/web/web_footer.dart';
+
+import '../../widgets/web/web_page_shell.dart';
+import '../../widgets/mobile/mobile_page_wrapper.dart';
 
 class WebWorkoutsPage extends ConsumerWidget {
-  const WebWorkoutsPage({super.key});
+  final bool useMobileWrapper;
+  const WebWorkoutsPage({super.key, this.useMobileWrapper = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final isRamadanMode = ref.watch(ramadanModeProvider);
     final l10n = AppLocalizations.of(context)!;
+    final isMobile = MediaQuery.of(context).size.width < 600;
 
     final programs = [
       _Program(
@@ -73,216 +74,273 @@ class WebWorkoutsPage extends ConsumerWidget {
       ),
     ];
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: Stack(
-        children: [
-          SingleChildScrollView(
+    final content = Column(
+      children: [
+        // Hero Section
+        FadeInDown(
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 80),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black,
+                  isDark ? AppColors.darkBackground : Colors.grey[100]!,
+                ],
+              ),
+            ),
             child: Column(
               children: [
-                SizedBox(height: isRamadanMode ? 130 : 80),
-                // Hero Section
-                FadeInDown(
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 80),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.black,
-                          isDark ? AppColors.darkBackground : Colors.grey[100]!,
-                        ],
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: AppColors.brandOrange.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const FaIcon(
-                            FontAwesomeIcons.fire,
-                            size: 50,
-                            color: AppColors.brandOrange,
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        Text(
-                          l10n.workoutsTitleFirst,
-                          style: GoogleFonts.oswald(
-                            fontSize: 60,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            height: 1.0,
-                          ),
-                        ),
-                        ShaderMask(
-                          blendMode: BlendMode.srcIn,
-                          shaderCallback: (bounds) =>
-                              AppColors.fieryGradient.createShader(bounds),
-                          child: Text(
-                            l10n.workoutsTitleSecond,
-                            style: GoogleFonts.oswald(
-                              fontSize: 60,
-                              fontWeight: FontWeight.bold,
-                              height: 1.0,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          l10n.workoutsSubtitle,
-                          style: GoogleFonts.oswald(
-                            fontSize: 24,
-                            letterSpacing: 5,
-                            color: Colors.grey[400],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Programs Grid
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 80,
-                    vertical: 60,
-                  ),
-                  child: GridView.builder(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 32,
-                          mainAxisSpacing: 32,
-                          childAspectRatio: 1.1,
-                        ),
-                    itemCount: programs.length,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemBuilder: (context, index) {
-                      return FadeInUp(
-                        delay: Duration(milliseconds: index * 100),
-                        child: _WorkoutCard(
-                          program: programs[index],
-                          isDark: isDark,
-                          l10n: l10n,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-
-                // CTA Section
                 Container(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 80,
-                    vertical: 40,
-                  ),
-                  padding: const EdgeInsets.all(60),
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF151515),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white10),
+                    color: AppColors.brandOrange.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          gradient: AppColors.fieryGradient,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const FaIcon(
-                          FontAwesomeIcons.calendarCheck,
-                          color: Colors.black,
-                          size: 40,
-                        ),
-                      ),
-                      const SizedBox(width: 40),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.workoutsCtaTitle,
-                              style: GoogleFonts.oswald(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white : Colors.black,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              l10n.workoutsCtaText,
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                color: isDark
-                                    ? Colors.grey[400]
-                                    : Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 32),
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: AppColors.fieryGradient,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: ElevatedButton(
-                          onPressed: () {},
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 32,
-                              vertical: 20,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                l10n.workoutsCtaButton,
-                                style: GoogleFonts.oswald(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Icon(Icons.arrow_forward, size: 18),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: const FaIcon(
+                    FontAwesomeIcons.fire,
+                    size: 50,
+                    color: AppColors.brandOrange,
                   ),
                 ),
-
-                const SizedBox(height: 40),
-                const WebFooter(),
+                const SizedBox(height: 32),
+                Text(
+                  l10n.workoutsTitleFirst,
+                  style: GoogleFonts.oswald(
+                    fontSize: 60,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    height: 1.0,
+                  ),
+                ),
+                ShaderMask(
+                  blendMode: BlendMode.srcIn,
+                  shaderCallback: (bounds) =>
+                      AppColors.fieryGradient.createShader(bounds),
+                  child: Text(
+                    l10n.workoutsTitleSecond,
+                    style: GoogleFonts.oswald(
+                      fontSize: 60,
+                      fontWeight: FontWeight.bold,
+                      height: 1.0,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  l10n.workoutsSubtitle,
+                  style: GoogleFonts.oswald(
+                    fontSize: 24,
+                    letterSpacing: 5,
+                    color: Colors.grey[400],
+                  ),
+                ),
               ],
             ),
           ),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: WebNavBar(
-              isScrolled: true,
-              activeRoute: AppRoutes.webWorkouts,
-            ),
+        ),
+
+        // Programs Grid
+        Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 20 : 80,
+            vertical: isMobile ? 40 : 60,
           ),
-        ],
-      ),
+          child: GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: isMobile ? 1 : 3,
+              crossAxisSpacing: 32,
+              mainAxisSpacing: 32,
+              childAspectRatio: isMobile ? 1.4 : 1.1,
+            ),
+            itemCount: programs.length,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemBuilder: (context, index) {
+              return FadeInUp(
+                delay: Duration(milliseconds: index * 100),
+                child: _WorkoutCard(
+                  program: programs[index],
+                  isDark: isDark,
+                  l10n: l10n,
+                ),
+              );
+            },
+          ),
+        ),
+
+        // CTA Section
+        // CTA Section
+        Container(
+          margin: EdgeInsets.symmetric(
+            horizontal: isMobile ? 20 : 80,
+            vertical: 40,
+          ),
+          padding: EdgeInsets.all(isMobile ? 30 : 60),
+          decoration: BoxDecoration(
+            color: const Color(0xFF151515),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white10),
+          ),
+          child: isMobile
+              ? Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: AppColors.fieryGradient,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const FaIcon(
+                        FontAwesomeIcons.calendarCheck,
+                        color: Colors.black,
+                        size: 32,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      l10n.workoutsCtaTitle,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.oswald(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      l10n.workoutsCtaText,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.fieryGradient,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              l10n.workoutsCtaButton,
+                              style: GoogleFonts.oswald(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.arrow_forward, size: 18),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: AppColors.fieryGradient,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const FaIcon(
+                        FontAwesomeIcons.calendarCheck,
+                        color: Colors.black,
+                        size: 40,
+                      ),
+                    ),
+                    const SizedBox(width: 40),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.workoutsCtaTitle,
+                            style: GoogleFonts.oswald(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            l10n.workoutsCtaText,
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 32),
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: AppColors.fieryGradient,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 20,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              l10n.workoutsCtaButton,
+                              style: GoogleFonts.oswald(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.arrow_forward, size: 18),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+
+        const SizedBox(height: 40),
+      ],
     );
+
+    if (useMobileWrapper) {
+      return MobilePageWrapper(
+        title: l10n.navWorkouts.toUpperCase(),
+        showBackButton: true,
+        child: SingleChildScrollView(child: content),
+      );
+    }
+
+    return WebPageShell(activeRoute: AppRoutes.webWorkouts, child: content);
   }
 }
 

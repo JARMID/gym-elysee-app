@@ -14,6 +14,7 @@ import '../../presentation/screens/web/web_blog_page.dart';
 import '../../presentation/screens/web/web_contact_page.dart';
 import '../../presentation/screens/web/web_workouts_page.dart';
 import '../../presentation/screens/web/web_challenges_page.dart';
+import '../../presentation/screens/mobile/mobile_contact_page.dart';
 import '../../presentation/screens/web/web_partners_page.dart';
 import '../../presentation/screens/web/web_programs_page.dart';
 import '../../presentation/screens/member/member_dashboard_screen.dart';
@@ -43,6 +44,12 @@ class AppRoutes {
   static const webChallenges = '/challenges';
   static const webPartners = '/partners';
   static const webPrograms = '/programs';
+  static const mobileContact = '/mobile/contact';
+  static const mobileBranches = '/mobile/branches';
+  static const mobilePricing = '/mobile/pricing';
+  static const mobileBlog = '/mobile/blog';
+  static const mobileWorkouts = '/mobile/workouts';
+  static const mobileChallenges = '/mobile/challenges';
 
   static const splash = '/';
   static const onboarding = '/onboarding';
@@ -87,9 +94,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           state.matchedLocation == AppRoutes.webWorkouts ||
           state.matchedLocation == AppRoutes.webChallenges ||
           state.matchedLocation == AppRoutes.webPartners ||
-          state.matchedLocation.startsWith(
-            '/branch-details/',
-          ); // Allow dynamic branch details
+          state.matchedLocation.startsWith('/branch-details/') ||
+          state.matchedLocation == AppRoutes.mobileContact ||
+          state.matchedLocation == AppRoutes.mobileBranches ||
+          state.matchedLocation == AppRoutes.mobilePricing ||
+          state.matchedLocation == AppRoutes.mobileBlog ||
+          state.matchedLocation == AppRoutes.mobileWorkouts ||
+          state.matchedLocation == AppRoutes.mobileChallenges;
 
       final isAuthRoute =
           state.matchedLocation == AppRoutes.login ||
@@ -164,6 +175,36 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.webPrograms,
         builder: (context, state) => const WebProgramsPage(),
+      ),
+
+      // Mobile Routes
+      GoRoute(
+        path: AppRoutes.mobileContact,
+        builder: (context, state) => const MobileContactPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.mobileBranches,
+        builder: (context, state) =>
+            const WebBranchesPage(useMobileWrapper: true),
+      ),
+      GoRoute(
+        path: AppRoutes.mobilePricing,
+        builder: (context, state) =>
+            const WebPricingPage(useMobileWrapper: true),
+      ),
+      GoRoute(
+        path: AppRoutes.mobileBlog,
+        builder: (context, state) => const WebBlogPage(useMobileWrapper: true),
+      ),
+      GoRoute(
+        path: AppRoutes.mobileWorkouts,
+        builder: (context, state) =>
+            const WebWorkoutsPage(useMobileWrapper: true),
+      ),
+      GoRoute(
+        path: AppRoutes.mobileChallenges,
+        builder: (context, state) =>
+            const WebChallengesPage(useMobileWrapper: true),
       ),
 
       // Auth routes

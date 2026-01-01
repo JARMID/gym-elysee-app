@@ -1,118 +1,64 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:gyelyseedz/l10n/app_localizations.dart';
 
 import '../../../core/routing/app_router.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../providers/theme_provider.dart';
-import '../../widgets/web/web_nav_bar.dart';
-import '../../widgets/web/web_footer.dart';
+import '../../widgets/web/web_page_shell.dart';
+import '../../widgets/web/web_page_header.dart';
+import '../../widgets/mobile/mobile_page_wrapper.dart';
 
-class WebBlogPage extends ConsumerWidget {
-  const WebBlogPage({super.key});
+class WebBlogPage extends StatelessWidget {
+  final bool useMobileWrapper;
+  const WebBlogPage({super.key, this.useMobileWrapper = false});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isRamadanMode = ref.watch(ramadanModeProvider);
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 800;
 
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final content = Column(
+      children: [
+        // Unified Header
+        // Unified Header
+        WebPageHeader(title: l10n.blogTitle, subtitle: l10n.blogSubtitle),
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                SizedBox(height: isRamadanMode ? 130 : 80),
-                FadeInDown(
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 80),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.black,
-                          isDark ? AppColors.darkBackground : Colors.grey[100]!,
-                        ],
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        ShaderMask(
-                          blendMode: BlendMode.srcIn,
-                          shaderCallback: (bounds) =>
-                              AppColors.fieryGradient.createShader(bounds),
-                          child: Text(
-                            l10n.blogTitle,
-                            style: GoogleFonts.oswald(
-                              fontSize: 60,
-                              fontWeight: FontWeight.bold,
-                              shadows: [
-                                Shadow(
-                                  color: AppColors.brandOrange.withValues(
-                                    alpha: 0.5,
-                                  ),
-                                  blurRadius: 30,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          l10n.blogSubtitle,
-                          style: GoogleFonts.inter(
-                            fontSize: 18,
-                            color: Colors.grey[400],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 100),
-                  child: GridView.builder(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 40,
-                          mainAxisSpacing: 40,
-                          childAspectRatio: 0.8,
-                        ),
-                    itemCount: 6,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemBuilder: (context, index) {
-                      return FadeInUp(
-                        delay: Duration(milliseconds: index * 100),
-                        child: _buildBlogCard(context, index, l10n),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 100),
-                const WebFooter(),
-              ],
+        // Blog Grid
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: isMobile ? 20 : 100),
+          child: GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: isMobile ? 1 : 3,
+              crossAxisSpacing: isMobile ? 0 : 40,
+              mainAxisSpacing: isMobile ? 20 : 40,
+              childAspectRatio: isMobile ? 0.85 : 0.8,
             ),
+            itemCount: 6,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemBuilder: (context, index) {
+              return FadeInUp(
+                delay: Duration(milliseconds: index * 100),
+                child: _buildBlogCard(context, index, l10n),
+              );
+            },
           ),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: WebNavBar(isScrolled: true, activeRoute: AppRoutes.webBlog),
-          ),
-        ],
-      ),
+        ),
+        SizedBox(height: isMobile ? 40 : 100),
+      ],
     );
+
+    if (useMobileWrapper) {
+      return MobilePageWrapper(
+        title: l10n.navBlog.toUpperCase(),
+        showBackButton: true,
+        child: SingleChildScrollView(child: content),
+      );
+    }
+
+    return WebPageShell(activeRoute: AppRoutes.webBlog, child: content);
   }
 
   Widget _buildBlogCard(
@@ -203,7 +149,7 @@ class _BlogCardState extends State<_BlogCard> {
                   image: const DecorationImage(
                     image: NetworkImage(
                       'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800',
-                    ), // Placeholder
+                    ),
                     fit: BoxFit.cover,
                     opacity: 0.6,
                   ),
@@ -217,7 +163,7 @@ class _BlogCardState extends State<_BlogCard> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(16), // Reduced padding from 24
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -226,7 +172,7 @@ class _BlogCardState extends State<_BlogCard> {
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.brandOrange, // Updated to Orange
+                        color: AppColors.brandOrange,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -256,7 +202,7 @@ class _BlogCardState extends State<_BlogCard> {
                           size: 16,
                           color: _isHovered
                               ? AppColors.brandOrange
-                              : Colors.white70, // Updated to Orange
+                              : Colors.white70,
                         ),
                       ],
                     ),
@@ -286,6 +232,8 @@ class _ArticleDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
     return Dialog(
       backgroundColor: AppColors.cardDark,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -304,7 +252,9 @@ class _ArticleDialog extends StatelessWidget {
                     top: Radius.circular(16),
                   ),
                   image: const DecorationImage(
-                    image: AssetImage('assets/images/program_1.jpg'),
+                    image: NetworkImage(
+                      'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800',
+                    ),
                     fit: BoxFit.cover,
                     opacity: 0.7,
                   ),
@@ -326,7 +276,7 @@ class _ArticleDialog extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(40),
+                padding: EdgeInsets.all(isMobile ? 24 : 40),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -342,7 +292,7 @@ class _ArticleDialog extends StatelessWidget {
                     Text(
                       title,
                       style: GoogleFonts.oswald(
-                        fontSize: 40,
+                        fontSize: isMobile ? 32 : 40,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),

@@ -18,7 +18,7 @@ class WebFooter extends StatelessWidget {
     final isSmallScreen = MediaQuery.of(context).size.width < 900;
 
     return Container(
-      color: isDark ? Colors.black : const Color(0xFF0A0A0A),
+      color: isDark ? const Color(0xFF0A0A0A) : Colors.white,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -37,7 +37,7 @@ class WebFooter extends StatelessWidget {
                 style: GoogleFonts.oswald(
                   fontSize: 250,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: isDark ? Colors.white : Colors.grey[100],
                   letterSpacing: 20,
                 ),
               ),
@@ -69,7 +69,9 @@ class WebFooter extends StatelessWidget {
                   decoration: BoxDecoration(
                     border: Border(
                       top: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.1),
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.1)
+                            : Colors.black.withValues(alpha: 0.1),
                       ),
                     ),
                   ),
@@ -184,7 +186,7 @@ class WebFooter extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(l10n.footerNavigation),
+              _buildHeader(context, l10n.footerNavigation),
               const SizedBox(height: 32),
               _FooterLink(
                 l10n.footerHome,
@@ -216,7 +218,7 @@ class WebFooter extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(l10n.footerBranches),
+              _buildHeader(context, l10n.footerBranches),
               const SizedBox(height: 32),
               _BranchLink(
                 'GYM ÉLYSÉE DZ (Hydra)',
@@ -252,7 +254,7 @@ class WebFooter extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(l10n.footerContact),
+              _buildHeader(context, l10n.footerContact),
               const SizedBox(height: 32),
               _ContactItem(Icons.email_outlined, 'contact@gymelysee.dz'),
               const SizedBox(height: 16),
@@ -260,15 +262,6 @@ class WebFooter extends StatelessWidget {
               const SizedBox(height: 16),
               _ContactItem(Icons.access_time, l10n.footerHours),
               const SizedBox(height: 32),
-              Row(
-                children: [
-                  _Payment('assets/images/icone-dahabia.png'),
-                  const SizedBox(width: 12),
-                  _Payment(
-                    'assets/images/icone-cib.png',
-                  ), // Using icone-cib.png as requested (user mentioned 2, picked this one)
-                ],
-              ),
             ],
           ),
         ),
@@ -288,19 +281,87 @@ class WebFooter extends StatelessWidget {
           style: GoogleFonts.inter(color: Colors.grey[500], fontSize: 14),
         ),
         const SizedBox(height: 40),
-        _buildHeader(l10n.footerNavigation),
+        _buildHeader(context, l10n.footerNavigation),
         const SizedBox(height: 16),
         _FooterLink(l10n.footerHome, onTap: () => context.go(AppRoutes.splash)),
+        _FooterLink(
+          l10n.footerBranches,
+          onTap: () => context.go(AppRoutes.webBranches),
+        ),
         _FooterLink(
           l10n.footerPricing,
           onTap: () => context.go(AppRoutes.webPricing),
         ),
+        _FooterLink(l10n.navBlog, onTap: () => context.go(AppRoutes.webBlog)),
+        _FooterLink(
+          l10n.footerContact,
+          onTap: () => context.go(AppRoutes.webContact),
+        ),
         const SizedBox(height: 40),
-        _buildHeader(l10n.footerContact),
+        _buildHeader(context, l10n.footerBranches),
+        const SizedBox(height: 16),
+        _BranchLink(
+          'GYM ÉLYSÉE DZ (Hydra)',
+          onTap: () => context.go('/branch-details/1'),
+        ),
+        _BranchLink(
+          'GYM ÉLYSÉE BOXE (Oran)',
+          onTap: () => context.go('/branch-details/2'),
+        ),
+        _BranchLink(
+          'TIGER SPORT DZ (Bouchaoui)',
+          onTap: () => context.go('/branch-details/3'),
+        ),
+        _BranchLink(
+          'GYM ÉLYSÉE GRAPPLING (Constantine)',
+          onTap: () => context.go('/branch-details/4'),
+        ),
+        _BranchLink(
+          'GYM ÉLYSÉE FEMMES (Cheraga)',
+          onTap: () => context.go('/branch-details/5'),
+        ),
+        _BranchLink(
+          'GYM ÉLYSÉE CROSSFIT (Ben Aknoun)',
+          onTap: () => context.go('/branch-details/6'),
+        ),
+        const SizedBox(height: 40),
+        _buildHeader(context, l10n.footerContact),
         const SizedBox(height: 16),
         _ContactItem(Icons.email_outlined, 'contact@gymelysee.dz'),
         const SizedBox(height: 8),
         _ContactItem(Icons.phone_outlined, '+213 555 123 456'),
+        const SizedBox(height: 8),
+        _ContactItem(Icons.access_time, l10n.footerHours),
+        const SizedBox(height: 32),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            _AnimatedSocialIcon(
+              FontAwesomeIcons.facebookF,
+              url: 'https://facebook.com',
+              color: Colors.blue,
+            ),
+            const SizedBox(width: 12),
+            _AnimatedSocialIcon(
+              FontAwesomeIcons.instagram,
+              url: 'https://instagram.com',
+              color: Colors.pink,
+            ),
+            const SizedBox(width: 12),
+            _AnimatedSocialIcon(
+              FontAwesomeIcons.youtube,
+              url: 'https://youtube.com',
+              color: Colors.red,
+            ),
+            const SizedBox(width: 12),
+            _AnimatedSocialIcon(
+              FontAwesomeIcons.tiktok,
+              url: 'https://tiktok.com',
+              color: Colors.white,
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
       ],
     );
   }
@@ -313,7 +374,7 @@ class WebFooter extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(String text) {
+  Widget _buildHeader(BuildContext context, String text) {
     return Row(
       children: [
         Container(
@@ -328,7 +389,9 @@ class WebFooter extends StatelessWidget {
         Text(
           text,
           style: GoogleFonts.oswald(
-            color: Colors.white,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white
+                : Colors.black,
             fontWeight: FontWeight.bold,
             fontSize: 14,
             letterSpacing: 1,
@@ -379,7 +442,11 @@ class _BackToTopButtonState extends State<_BackToTopButton> {
                 turns: _isHovered ? -0.25 : 0,
                 child: Icon(
                   Icons.arrow_upward,
-                  color: _isHovered ? Colors.black : Colors.white54,
+                  color: _isHovered
+                      ? Colors.black
+                      : (Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white54
+                            : Colors.black54),
                   size: 18,
                 ),
               ),
@@ -387,7 +454,11 @@ class _BackToTopButtonState extends State<_BackToTopButton> {
               Text(
                 l10n.footerBackToTop,
                 style: GoogleFonts.oswald(
-                  color: _isHovered ? Colors.black : Colors.white54,
+                  color: _isHovered
+                      ? Colors.black
+                      : (Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white54
+                            : Colors.black54),
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                   letterSpacing: 1,
@@ -458,37 +529,46 @@ class _BranchLinkState extends State<_BranchLink> {
         child: GestureDetector(
           onTap: widget.onTap,
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                transform: Matrix4.identity()
-                  ..rotateZ(0.785398)
-                  // ignore: deprecated_member_use
-                  ..scale(_isHovered ? 1.2 : 1.0, _isHovered ? 1.2 : 1.0),
-                child: Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: _isHovered
-                        ? AppColors.brandOrange
-                        : Colors.transparent,
-                    border: Border.all(
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  transform: Matrix4.identity()
+                    ..rotateZ(0.785398)
+                    // ignore: deprecated_member_use
+                    ..scale(_isHovered ? 1.2 : 1.0, _isHovered ? 1.2 : 1.0),
+                  child: Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
                       color: _isHovered
                           ? AppColors.brandOrange
-                          : AppColors.brandYellow,
-                      width: 1,
+                          : Colors.transparent,
+                      border: Border.all(
+                        color: _isHovered
+                            ? AppColors.brandOrange
+                            : AppColors.brandYellow,
+                        width: 1,
+                      ),
                     ),
                   ),
                 ),
               ),
               const SizedBox(width: 12),
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 200),
-                style: GoogleFonts.inter(
-                  color: _isHovered ? AppColors.brandOrange : Colors.grey[500],
-                  fontSize: 14,
+              Expanded(
+                child: AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 200),
+                  style: GoogleFonts.inter(
+                    color: _isHovered
+                        ? AppColors.brandOrange
+                        : Colors.grey[500],
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                  child: Text(widget.text),
                 ),
-                child: Text(widget.text),
               ),
             ],
           ),
@@ -608,24 +688,6 @@ class _AnimatedSocialIconState extends State<_AnimatedSocialIcon> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _Payment extends StatelessWidget {
-  final String assetPath;
-  const _Payment(this.assetPath);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Image.asset(assetPath, height: 20, fit: BoxFit.contain),
     );
   }
 }

@@ -10,382 +10,484 @@ import '../../../core/routing/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../providers/landing_providers.dart';
 import '../../../data/models/branch_model.dart';
-import '../../providers/theme_provider.dart';
-import '../../widgets/web/web_footer.dart';
+
+import '../../widgets/web/web_page_shell.dart';
 import '../../widgets/web/web_map_section.dart';
-import '../../widgets/web/web_nav_bar.dart';
+import '../../widgets/mobile/mobile_page_wrapper.dart';
 
 class WebBranchesPage extends ConsumerStatefulWidget {
-  const WebBranchesPage({super.key});
+  final bool useMobileWrapper;
+  const WebBranchesPage({super.key, this.useMobileWrapper = false});
 
   @override
   ConsumerState<WebBranchesPage> createState() => _WebBranchesPageState();
 }
 
 class _WebBranchesPageState extends ConsumerState<WebBranchesPage> {
+  // Mobile Card Builder
+  Widget _buildMobileBranchCard(BranchModel branch, bool isDark) {
+    return FadeInUp(
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.grey[100],
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? Colors.white10 : Colors.grey[300]!,
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => context.go('/web/branches/${branch.id}'),
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Row(
+                    children: [
+                      // Type Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: AppColors.fieryGradient,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          branch.type.toUpperCase(),
+                          style: GoogleFonts.oswald(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: Colors.grey[600],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Name
+                  Text(
+                    branch.name,
+                    style: GoogleFonts.oswald(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Address
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        size: 16,
+                        color: AppColors.brandYellow,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          branch.address,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: Colors.grey[500],
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final branchesAsync = ref.watch(branchesProvider);
-    final isRamadanMode = ref.watch(ramadanModeProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                SizedBox(height: isRamadanMode ? 130 : 80),
+    // Check if mobile
+    final isMobile = MediaQuery.of(context).size.width < 800;
 
-                FadeInDown(
-                  duration: const Duration(milliseconds: 800),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 80),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.black,
-                          isDark ? AppColors.darkBackground : Colors.grey[100]!,
+    // Content
+    final content = Column(
+      children: [
+        if (isMobile || widget.useMobileWrapper)
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: branchesAsync.when(
+              data: (branches) => ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: branches.length,
+                itemBuilder: (context, index) =>
+                    _buildMobileBranchCard(branches[index], isDark),
+              ),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => Center(child: Text('Error: $error')),
+            ),
+          )
+        else
+          Column(
+            children: [
+              FadeInDown(
+                duration: const Duration(milliseconds: 800),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 80),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black,
+                        isDark ? AppColors.darkBackground : Colors.grey[100]!,
+                      ],
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      // Tag
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 1.5,
+                            color: AppColors.gold,
+                          ),
+                          const SizedBox(width: 16),
+                          const FaIcon(
+                            FontAwesomeIcons.dumbbell,
+                            color: AppColors.gold,
+                            size: 14,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.branchesTitleTag,
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.gold,
+                              letterSpacing: 3,
+                            ),
+                          ),
                         ],
                       ),
+                      const SizedBox(height: 24),
+                      // Title
+                      Text(
+                        l10n.branchesTitleFirst,
+                        style: GoogleFonts.oswald(
+                          fontSize: isMobile ? 48 : 72,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.gold,
+                          height: 1.0,
+                        ),
+                      ),
+                      ShaderMask(
+                        shaderCallback: (bounds) => LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            AppColors.brandOrange,
+                            AppColors.brandYellow,
+                          ],
+                        ).createShader(bounds),
+                        child: Text(
+                          l10n.branchesTitleSecond,
+                          style: GoogleFonts.oswald(
+                            fontSize: isMobile ? 48 : 72,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            height: 1.0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        l10n.branchesSubtitle,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: 18,
+                          color: Colors.grey[400],
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Branches Grid
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 40,
+                  vertical: 40,
+                ),
+                child: branchesAsync.when(
+                  data: (branches) {
+                    final displayBranches = branches.isNotEmpty
+                        ? branches.take(6).toList()
+                        : [
+                            {
+                              'name': 'GYM ÉLYSÉE DZ',
+                              'id': 1,
+                              'loc': 'Hydra, Alger',
+                              'tags': [
+                                'Flagship',
+                                'Musculation',
+                                'Boxing',
+                                'MMA',
+                              ],
+                              'type': 'flagship',
+                              'desc':
+                                  'Notre salle flagship offre une expérience fitness complète avec équipements de dernière génération...',
+                            },
+                            {
+                              'name': 'GYM ÉLYSÉE BOXE',
+                              'id': 2,
+                              'loc': 'Bab El Oued, Alger',
+                              'tags': ['Boxe Anglaise', 'Préparation Physique'],
+                              'type': 'boxing',
+                              'desc':
+                                  'Temple de la boxe anglaise en Algérie, notre centre de Bab El Oued a formé plusieurs champions...',
+                            },
+                            {
+                              'name': 'TIGER SPORT DZ',
+                              'id': 3,
+                              'loc': 'Bouchaoui, Alger',
+                              'tags': ['MMA', 'Striking', 'Lutte', 'Jiu-Jitsu'],
+                              'type': 'mma',
+                              'desc':
+                                  'Tiger Sport DZ est le centre de référence pour les arts martiaux mixtes en Algérie...',
+                            },
+                            {
+                              'name': 'GYM ÉLYSÉE GRAPPLING',
+                              'id': 4,
+                              'loc': 'Constantine',
+                              'tags': [
+                                'Jiu-Jitsu Brésilien',
+                                'Wrestling',
+                                'No-Gi',
+                              ],
+                              'type': 'grappling',
+                              'desc':
+                                  'Spécialisé dans le grappling, notre centre de Constantine offre un enseignement de classe mondiale...',
+                            },
+                            {
+                              'name': 'GYM ÉLYSÉE FEMMES',
+                              'id': 5,
+                              'loc': 'Cheraga, Alger',
+                              'tags': [
+                                'Femmes Only',
+                                'Fitness',
+                                'Cardio',
+                                'Self-Défense',
+                              ],
+                              'type': 'women',
+                              'desc':
+                                  'Un espace exclusivement féminin où les femmes peuvent s\'entraîner en toute sérénité...',
+                            },
+                            {
+                              'name': 'GYM ÉLYSÉE CROSSFIT',
+                              'id': 6,
+                              'loc': 'Ben Aknoun, Alger',
+                              'tags': ['CrossFit', 'WOD', 'Haltérophilie'],
+                              'type': 'crossfit',
+                              'desc':
+                                  'Le centre CrossFit offre des WODs quotidiens, une communauté dynamique et des équipements officiels...',
+                            },
+                          ];
+
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isWide = constraints.maxWidth > 1000;
+                        final cardWidth = isWide
+                            ? (constraints.maxWidth - 40) / 2 - 20
+                            : constraints.maxWidth;
+
+                        return Wrap(
+                          spacing: 40,
+                          runSpacing: 40,
+                          alignment: WrapAlignment.center,
+                          children: displayBranches.map<Widget>((b) {
+                            return SizedBox(
+                              width: cardWidth,
+                              child: _InteractiveHorizontalBranchCard(
+                                branch: b,
+                                l10n: l10n,
+                              ),
+                            );
+                          }).toList(),
+                        );
+                      },
+                    );
+                  },
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(color: AppColors.gold),
+                  ),
+                  error: (err, stack) => Center(
+                    child: Text(
+                      'Erreur: $err',
+                      style: const TextStyle(color: Colors.red),
                     ),
-                    child: Column(
-                      children: [
-                        // Tag
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 60),
+              const WebMapSection(),
+
+              // CTA Section
+              FadeInUp(
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 100),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.black,
+                        AppColors.darkBackground,
+                        Colors.brown.withValues(alpha: 0.2),
+                      ],
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      RichText(
+                        textAlign: TextAlign.center,
+                        text: TextSpan(
                           children: [
-                            Container(
-                              width: 40,
-                              height: 1.5,
-                              color: AppColors.gold,
+                            TextSpan(
+                              text: l10n.branchesCtaTitle1,
+                              style: GoogleFonts.oswald(
+                                fontSize: 48,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
-                            const SizedBox(width: 16),
-                            const FaIcon(
-                              FontAwesomeIcons.dumbbell,
-                              color: AppColors.gold,
-                              size: 14,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              l10n.branchesTitleTag,
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.gold,
-                                letterSpacing: 3,
+                            TextSpan(
+                              text: l10n.branchesCtaTitle2,
+                              style: GoogleFonts.oswald(
+                                fontSize: 48,
+                                fontWeight: FontWeight.bold,
+                                foreground: Paint()
+                                  ..shader =
+                                      LinearGradient(
+                                        colors: [
+                                          AppColors.brandOrange,
+                                          AppColors.brandYellow,
+                                        ],
+                                      ).createShader(
+                                        const Rect.fromLTWH(0, 0, 200, 50),
+                                      ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 24),
-                        // Title
-                        Text(
-                          l10n.branchesTitleFirst,
-                          style: GoogleFonts.oswald(
-                            fontSize: 72,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.gold,
-                            height: 1.0,
-                          ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        l10n.branchesCtaSubtitle,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: 18,
+                          color: Colors.grey[400],
                         ),
-                        ShaderMask(
-                          shaderCallback: (bounds) => LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
+                      ),
+                      const SizedBox(height: 40),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
                             colors: [
-                              AppColors.brandOrange,
                               AppColors.brandYellow,
+                              AppColors.brandOrange,
                             ],
-                          ).createShader(bounds),
-                          child: Text(
-                            l10n.branchesTitleSecond,
-                            style: GoogleFonts.oswald(
-                              fontSize: 72,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              height: 1.0,
-                            ),
                           ),
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                        const SizedBox(height: 24),
-                        Text(
-                          l10n.branchesSubtitle,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            fontSize: 18,
-                            color: Colors.grey[400],
-                            letterSpacing: 0.5,
+                        child: ElevatedButton.icon(
+                          onPressed: () => context.go(AppRoutes.webContact),
+                          icon: const FaIcon(
+                            FontAwesomeIcons.dumbbell,
+                            size: 16,
+                            color: Colors.black,
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Branches Grid
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 40,
-                    vertical: 40,
-                  ),
-                  child: branchesAsync.when(
-                    data: (branches) {
-                      final displayBranches = branches.isNotEmpty
-                          ? branches.take(6).toList()
-                          : [
-                              {
-                                'name': 'GYM ÉLYSÉE DZ',
-                                'id': 1,
-                                'loc': 'Hydra, Alger',
-                                'tags': [
-                                  'Flagship',
-                                  'Musculation',
-                                  'Boxing',
-                                  'MMA',
-                                ],
-                                'type': 'flagship',
-                                'desc':
-                                    'Notre salle flagship offre une expérience fitness complète avec équipements de dernière génération...',
-                              },
-                              {
-                                'name': 'GYM ÉLYSÉE BOXE',
-                                'id': 2,
-                                'loc': 'Bab El Oued, Alger',
-                                'tags': [
-                                  'Boxe Anglaise',
-                                  'Préparation Physique',
-                                ],
-                                'type': 'boxing',
-                                'desc':
-                                    'Temple de la boxe anglaise en Algérie, notre centre de Bab El Oued a formé plusieurs champions...',
-                              },
-                              {
-                                'name': 'TIGER SPORT DZ',
-                                'id': 3,
-                                'loc': 'Bouchaoui, Alger',
-                                'tags': [
-                                  'MMA',
-                                  'Striking',
-                                  'Lutte',
-                                  'Jiu-Jitsu',
-                                ],
-                                'type': 'mma',
-                                'desc':
-                                    'Tiger Sport DZ est le centre de référence pour les arts martiaux mixtes en Algérie...',
-                              },
-                              {
-                                'name': 'GYM ÉLYSÉE GRAPPLING',
-                                'id': 4,
-                                'loc': 'Constantine',
-                                'tags': [
-                                  'Jiu-Jitsu Brésilien',
-                                  'Wrestling',
-                                  'No-Gi',
-                                ],
-                                'type': 'grappling',
-                                'desc':
-                                    'Spécialisé dans le grappling, notre centre de Constantine offre un enseignement de classe mondiale...',
-                              },
-                              {
-                                'name': 'GYM ÉLYSÉE FEMMES',
-                                'id': 5,
-                                'loc': 'Cheraga, Alger',
-                                'tags': [
-                                  'Femmes Only',
-                                  'Fitness',
-                                  'Cardio',
-                                  'Self-Défense',
-                                ],
-                                'type': 'women',
-                                'desc':
-                                    'Un espace exclusivement féminin où les femmes peuvent s\'entraîner en toute sérénité...',
-                              },
-                              {
-                                'name': 'GYM ÉLYSÉE CROSSFIT',
-                                'id': 6,
-                                'loc': 'Ben Aknoun, Alger',
-                                'tags': ['CrossFit', 'WOD', 'Haltérophilie'],
-                                'type': 'crossfit',
-                                'desc':
-                                    'Le centre CrossFit offre des WODs quotidiens, une communauté dynamique et des équipements officiels...',
-                              },
-                            ];
-
-                      return LayoutBuilder(
-                        builder: (context, constraints) {
-                          final isWide = constraints.maxWidth > 1000;
-                          final cardWidth = isWide
-                              ? (constraints.maxWidth - 40) / 2 - 20
-                              : constraints.maxWidth;
-
-                          return Wrap(
-                            spacing: 40,
-                            runSpacing: 40,
-                            alignment: WrapAlignment.center,
-                            children: displayBranches.map<Widget>((b) {
-                              return SizedBox(
-                                width: cardWidth,
-                                child: _InteractiveHorizontalBranchCard(
-                                  branch: b,
-                                  l10n: l10n,
-                                ),
-                              );
-                            }).toList(),
-                          );
-                        },
-                      );
-                    },
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(color: AppColors.gold),
-                    ),
-                    error: (err, stack) => Center(
-                      child: Text(
-                        'Erreur: $err',
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 60),
-                const WebMapSection(),
-
-                // CTA Section
-                FadeInUp(
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 100),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.black,
-                          AppColors.darkBackground,
-                          Colors.brown.withValues(alpha: 0.2),
-                        ],
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        RichText(
-                          textAlign: TextAlign.center,
-                          text: TextSpan(
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              TextSpan(
-                                text: l10n.branchesCtaTitle1,
+                              Text(
+                                l10n.branchesCtaButton,
                                 style: GoogleFonts.oswald(
-                                  fontSize: 48,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                                  color: Colors.black,
+                                  letterSpacing: 1,
                                 ),
                               ),
-                              TextSpan(
-                                text: l10n.branchesCtaTitle2,
-                                style: GoogleFonts.oswald(
-                                  fontSize: 48,
-                                  fontWeight: FontWeight.bold,
-                                  foreground: Paint()
-                                    ..shader =
-                                        LinearGradient(
-                                          colors: [
-                                            AppColors.brandOrange,
-                                            AppColors.brandYellow,
-                                          ],
-                                        ).createShader(
-                                          const Rect.fromLTWH(0, 0, 200, 50),
-                                        ),
-                                ),
+                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.arrow_forward,
+                                size: 16,
+                                color: Colors.black,
                               ),
                             ],
                           ),
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          l10n.branchesCtaSubtitle,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            fontSize: 18,
-                            color: Colors.grey[400],
-                          ),
-                        ),
-                        const SizedBox(height: 40),
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                AppColors.brandYellow,
-                                AppColors.brandOrange,
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: ElevatedButton.icon(
-                            onPressed: () => context.go(AppRoutes.webContact),
-                            icon: const FaIcon(
-                              FontAwesomeIcons.dumbbell,
-                              size: 16,
-                              color: Colors.black,
-                            ),
-                            label: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  l10n.branchesCtaButton,
-                                  style: GoogleFonts.oswald(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                    letterSpacing: 1,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                const Icon(
-                                  Icons.arrow_forward,
-                                  size: 16,
-                                  color: Colors.black,
-                                ),
-                              ],
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 32,
-                                vertical: 20,
-                              ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32,
+                              vertical: 20,
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
+              ),
 
-                const WebFooter(),
-              ],
-            ),
+              const SizedBox(height: 80),
+            ],
           ),
-
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: WebNavBar(
-              isScrolled: true,
-              activeRoute: AppRoutes.webBranches,
-            ),
-          ),
-        ],
-      ),
+      ],
     );
+
+    if (widget.useMobileWrapper) {
+      return MobilePageWrapper(
+        title: l10n.navBranches.toUpperCase(),
+        showBackButton: true,
+        child: SingleChildScrollView(child: content),
+      );
+    }
+
+    return WebPageShell(activeRoute: AppRoutes.webBranches, child: content);
   }
 }
 

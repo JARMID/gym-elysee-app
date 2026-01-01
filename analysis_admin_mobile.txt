@@ -3,9 +3,8 @@ Analyzing gyelyseedz...
    info - 'AutoDisposeFutureProviderRef' is deprecated and shouldn't be used. will be removed in 3.0.0. Use Ref instead - lib\presentation\providers\analytics_provider.g.dart:23:26 - deprecated_member_use
    info - 'AutoDisposeFutureProviderRef' is deprecated and shouldn't be used. will be removed in 3.0.0. Use Ref instead - lib\presentation\providers\analytics_provider.g.dart:40:7 - deprecated_member_use
    info - 'AutoDisposeFutureProviderRef' is deprecated and shouldn't be used. will be removed in 3.0.0. Use Ref instead - lib\presentation\providers\analytics_provider.g.dart:58:7 - deprecated_member_use
-warning - Unused import: 'package:font_awesome_flutter/font_awesome_flutter.dart' - lib\presentation\screens\mobile\mobile_contact_page.dart:5:8 - unused_import
-warning - A value for optional parameter 'accentColor' isn't ever given - lib\presentation\screens\mobile\mobile_contact_page.dart:440:10 - unused_element_parameter
-warning - The value of the local variable 'isDark' isn't used - lib\presentation\screens\web\mobile_landing_page.dart:376:11 - unused_local_variable
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\admin\admin_dashboard_screen.dart:390:37 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\admin\admin_dashboard_screen.dart:390:41 - unnecessary_underscores
    info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\widgets\admin\analytics\revenue_chart_card.dart:186:41 - deprecated_member_use
    info - Unnecessary use of multiple underscores - lib\presentation\widgets\web\mobile_navigation_sheet.dart:50:39 - unnecessary_underscores
    info - Unnecessary use of multiple underscores - lib\presentation\widgets\web\mobile_navigation_sheet.dart:50:43 - unnecessary_underscores

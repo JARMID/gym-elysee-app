@@ -1,275 +1,145 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:animate_do/animate_do.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../widgets/web/web_footer.dart';
+import '../../providers/theme_provider.dart';
+import '../../providers/language_provider.dart';
 
-/// Enhanced mobile-optimized landing page with navigation and rich content
-class MobileLandingPage extends StatefulWidget {
+/// Mobile-native landing page optimized for app experience
+class MobileLandingPage extends ConsumerStatefulWidget {
   const MobileLandingPage({super.key});
 
   @override
-  State<MobileLandingPage> createState() => _MobileLandingPageState();
+  ConsumerState<MobileLandingPage> createState() => _MobileLandingPageState();
 }
 
-class _MobileLandingPageState extends State<MobileLandingPage> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+class _MobileLandingPageState extends ConsumerState<MobileLandingPage> {
+  final ScrollController _scrollController = ScrollController();
+  bool _showBackToTop = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(() {
+      if (_scrollController.offset > 300 && !_showBackToTop) {
+        setState(() => _showBackToTop = true);
+      } else if (_scrollController.offset <= 300 && _showBackToTop) {
+        setState(() => _showBackToTop = false);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: isDark ? AppColors.darkBackground : Colors.white,
-      drawer: _buildDrawer(context, l10n, isDark),
+      backgroundColor: isDark ? const Color(0xFF0A0A0A) : Colors.white,
       body: Stack(
         children: [
-          // Main scrollable content
           SingleChildScrollView(
+            controller: _scrollController,
             child: Column(
               children: [
-                // Hero Section with Background Image
-                _buildHeroSection(context, l10n, isDark),
+                // Hero
+                _buildHero(context, l10n, isDark, screenHeight),
 
-                // Stats Section
-                _buildStatsSection(context, l10n, isDark),
+                // Quick Stats
+                FadeInUp(
+                  delay: const Duration(milliseconds: 200),
+                  child: _buildQuickStats(isDark),
+                ),
 
-                // Features Section
-                _buildFeaturesSection(context, l10n, isDark),
+                // Features
+                FadeInUp(
+                  delay: const Duration(milliseconds: 300),
+                  child: _buildFeatures(context, isDark),
+                ),
 
-                // CTA Section
-                _buildCTASection(context, l10n, isDark),
+                // Branches Preview
+                FadeInUp(
+                  delay: const Duration(milliseconds: 400),
+                  child: _buildBranchesPreview(context, isDark),
+                ),
+
+                // Testimonials
+                FadeInUp(
+                  delay: const Duration(milliseconds: 500),
+                  child: _buildTestimonials(isDark),
+                ),
+
+                // CTA
+                FadeInUp(
+                  delay: const Duration(milliseconds: 600),
+                  child: _buildCTA(context, isDark),
+                ),
 
                 // Footer
-                _buildFooter(context, l10n, isDark),
+                const WebFooter(),
               ],
             ),
           ),
 
-          // Floating App Bar
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: _buildAppBar(context, isDark),
-          ),
+          // Back to Top Button
+          if (_showBackToTop)
+            Positioned(
+              bottom: 20,
+              right: 20,
+              child: FadeIn(
+                child: FloatingActionButton(
+                  mini: true,
+                  backgroundColor: AppColors.brandYellow,
+                  onPressed: () {
+                    _scrollController.animateTo(
+                      0,
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.easeOut,
+                    );
+                  },
+                  child: const Icon(
+                    Icons.arrow_upward,
+                    color: Colors.black,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildAppBar(BuildContext context, bool isDark) {
-    return Container(
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 8,
-        bottom: 12,
-        left: 16,
-        right: 16,
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.black.withValues(alpha: 0.7),
-            Colors.black.withValues(alpha: 0.3),
-            Colors.transparent,
-          ],
-        ),
-      ),
-      child: Row(
-        children: [
-          // Menu Button
-          IconButton(
-            icon: const Icon(Icons.menu, color: Colors.white, size: 28),
-            onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-          ),
-          const Spacer(),
-          // Logo
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.brandYellow, width: 2),
-            ),
-            child: Center(
-              child: Text(
-                'E',
-                style: GoogleFonts.oswald(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.brandYellow,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDrawer(
+  Widget _buildHero(
     BuildContext context,
     AppLocalizations l10n,
     bool isDark,
+    double screenHeight,
   ) {
-    return Drawer(
-      backgroundColor: isDark ? const Color(0xFF0A0A0A) : Colors.white,
-      child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppColors.brandYellow, AppColors.brandOrange],
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'GYM ÉLYSÉE DZ',
-                    style: GoogleFonts.oswald(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Premium Fitness',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Menu Items
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                children: [
-                  _buildDrawerItem(
-                    icon: FontAwesomeIcons.dumbbell,
-                    title: 'Accueil',
-                    onTap: () {
-                      Navigator.pop(context);
-                      context.go(AppRoutes.webLanding);
-                    },
-                    isDark: isDark,
-                  ),
-                  _buildDrawerItem(
-                    icon: FontAwesomeIcons.locationDot,
-                    title: 'Nos Branches',
-                    onTap: () {
-                      Navigator.pop(context);
-                      context.go(AppRoutes.webBranches);
-                    },
-                    isDark: isDark,
-                  ),
-                  _buildDrawerItem(
-                    icon: FontAwesomeIcons.personRunning,
-                    title: 'Programmes',
-                    onTap: () {
-                      Navigator.pop(context);
-                      context.go(AppRoutes.webWorkouts);
-                    },
-                    isDark: isDark,
-                  ),
-                  _buildDrawerItem(
-                    icon: FontAwesomeIcons.users,
-                    title: 'Coaches',
-                    onTap: () {
-                      Navigator.pop(context);
-                      context.go(AppRoutes.webCoaches);
-                    },
-                    isDark: isDark,
-                  ),
-                  _buildDrawerItem(
-                    icon: FontAwesomeIcons.creditCard,
-                    title: 'Tarifs',
-                    onTap: () {
-                      Navigator.pop(context);
-                      context.go(AppRoutes.webPricing);
-                    },
-                    isDark: isDark,
-                  ),
-                  const Divider(height: 32),
-                  _buildDrawerItem(
-                    icon: FontAwesomeIcons.rightToBracket,
-                    title: 'Se Connecter',
-                    onTap: () {
-                      Navigator.pop(context);
-                      context.go(AppRoutes.login);
-                    },
-                    isDark: isDark,
-                    isAccent: true,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-    required bool isDark,
-    bool isAccent = false,
-  }) {
-    return ListTile(
-      leading: FaIcon(
-        icon,
-        color: isAccent
-            ? AppColors.brandYellow
-            : (isDark ? Colors.white70 : Colors.black87),
-        size: 20,
-      ),
-      title: Text(
-        title,
-        style: GoogleFonts.inter(
-          color: isAccent
-              ? AppColors.brandYellow
-              : (isDark ? Colors.white : Colors.black87),
-          fontWeight: isAccent ? FontWeight.bold : FontWeight.w500,
-        ),
-      ),
-      onTap: onTap,
-    );
-  }
-
-  Widget _buildHeroSection(
-    BuildContext context,
-    AppLocalizations l10n,
-    bool isDark,
-  ) {
-    return Container(
-      height: 600,
-      width: double.infinity,
+    return SizedBox(
+      height: screenHeight * 0.85,
       child: Stack(
         fit: StackFit.expand,
         children: [
           // Background Image
           Image.network(
-            'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&fit=crop',
+            'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&fit=crop',
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) =>
-                Container(color: Colors.grey[900]),
+                Container(color: const Color(0xFF0A0A0A)),
           ),
 
           // Gradient Overlay
@@ -279,140 +149,221 @@ class _MobileLandingPageState extends State<MobileLandingPage> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withValues(alpha: 0.6),
-                  Colors.black.withValues(alpha: 0.8),
+                  Colors.black.withValues(alpha: 0.4),
+                  Colors.black.withValues(alpha: 0.9),
                 ],
               ),
             ),
           ),
 
           // Content
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Spacer(),
-
-                // Title
-                Text(
-                  'GYM',
-                  style: GoogleFonts.oswald(
-                    fontSize: 48,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
-                    height: 1.0,
-                  ),
-                ),
-                ShaderMask(
-                  shaderCallback: (bounds) => LinearGradient(
-                    colors: [AppColors.brandYellow, AppColors.brandOrange],
-                  ).createShader(bounds),
-                  child: Text(
-                    'ÉLYSÉE DZ',
-                    style: GoogleFonts.oswald(
-                      fontSize: 48,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      height: 1.0,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Subtitle
-                Text(
-                  'La plus grande chaîne de salles de sport premium en Algérie',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    color: Colors.white.withValues(alpha: 0.9),
-                    height: 1.5,
-                  ),
-                ),
-
-                const SizedBox(height: 40),
-
-                // CTA Buttons
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => context.go(AppRoutes.register),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.brandYellow,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  // Nav Bar
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          'ESSAI GRATUIT',
-                          style: GoogleFonts.oswald(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1,
+                        // Logo (premium positioning like desktop)
+                        FadeInLeft(
+                          child: GestureDetector(
+                            onTap: () => context.go(AppRoutes.splash),
+                            child: SizedBox(
+                              width: 80,
+                              height: 50,
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                alignment: Alignment.center,
+                                children: [
+                                  Positioned(
+                                    top: -25,
+                                    child: SizedBox(
+                                      height: 140,
+                                      child: Image.asset(
+                                        'assets/images/logo.png',
+                                        fit: BoxFit.contain,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                              return Center(
+                                                child: ShaderMask(
+                                                  blendMode: BlendMode.srcIn,
+                                                  shaderCallback: (bounds) =>
+                                                      AppColors.fieryGradient
+                                                          .createShader(bounds),
+                                                  child: const FaIcon(
+                                                    FontAwesomeIcons.dumbbell,
+                                                    size: 32,
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.arrow_forward, size: 20),
+                        const Spacer(),
+
+                        // Language Toggle
+                        FadeInRight(child: _buildLanguageButton(context, ref)),
+
+                        // Theme Toggle
+                        FadeInRight(
+                          child: GestureDetector(
+                            onTap: () {
+                              ref
+                                  .read(themeNotifierProvider.notifier)
+                                  .toggleTheme(
+                                    Theme.of(context).brightness !=
+                                        Brightness.dark,
+                                  );
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.only(right: 12),
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.08),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                ),
+                              ),
+                              child: Icon(
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Icons.wb_sunny_rounded
+                                    : Icons.nightlight_round,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Menu
+                        FadeInRight(child: _buildMenuButton(context, l10n)),
                       ],
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 12),
+                  const Spacer(),
 
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () => context.go(AppRoutes.login),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: const BorderSide(color: Colors.white, width: 2),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                  // Title Section
+                  FadeInUp(
+                    delay: const Duration(milliseconds: 300),
+                    child: Column(
+                      children: [
+                        // Badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.brandYellow.withValues(
+                              alpha: 0.15,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: AppColors.brandYellow.withValues(
+                                alpha: 0.3,
+                              ),
+                            ),
+                          ),
+                          child: Text(
+                            "🏆 #1 EN ALGÉRIE",
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.brandYellow,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Title
+                        Text(
+                          "GYM",
+                          style: GoogleFonts.oswald(
+                            fontSize: 48,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                            height: 1.1,
+                          ),
+                        ),
+                        ShaderMask(
+                          shaderCallback: (bounds) =>
+                              AppColors.fieryGradient.createShader(bounds),
+                          child: Text(
+                            "ÉLYSÉE DZ",
+                            style: GoogleFonts.oswald(
+                              fontSize: 48,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              height: 1.1,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Subtitle
+                        Text(
+                          l10n.heroPivotSubtitle,
+                          style: GoogleFonts.inter(
+                            fontSize: 15,
+                            color: Colors.grey[400],
+                            height: 1.5,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
-                    child: Text(
-                      'SE CONNECTER',
-                      style: GoogleFonts.oswald(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // CTA Buttons
+                  FadeInUp(
+                    delay: const Duration(milliseconds: 500),
+                    child: Column(
+                      children: [
+                        _PrimaryButton(
+                          label: "COMMENCER",
+                          onTap: () => context.go(AppRoutes.register),
+                        ),
+                        const SizedBox(height: 12),
+                        _SecondaryButton(
+                          label: "SE CONNECTER",
+                          onTap: () => context.go(AppRoutes.login),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // Scroll hint
+                  FadeInUp(
+                    delay: const Duration(milliseconds: 700),
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Icon(
+                        Icons.keyboard_arrow_down,
+                        color: Colors.grey[600],
+                        size: 28,
                       ),
                     ),
                   ),
-                ),
-
-                const Spacer(),
-
-                // Scroll Indicator
-                Column(
-                  children: [
-                    Text(
-                      'DÉCOUVRIR',
-                      style: GoogleFonts.inter(
-                        fontSize: 10,
-                        color: Colors.white70,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Icon(
-                      Icons.keyboard_arrow_down,
-                      color: AppColors.brandYellow,
-                      size: 24,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -420,46 +371,180 @@ class _MobileLandingPageState extends State<MobileLandingPage> {
     );
   }
 
-  Widget _buildStatsSection(
-    BuildContext context,
-    AppLocalizations l10n,
-    bool isDark,
-  ) {
+  Widget _buildLanguageButton(BuildContext context, WidgetRef ref) {
+    final currentLocale = ref.watch(languageProvider);
+
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-      color: isDark ? Colors.black : Colors.grey[100],
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildStat('6', 'Branches', isDark),
-          Container(
-            width: 1,
-            height: 40,
-            color: AppColors.brandYellow.withValues(alpha: 0.3),
+      margin: const EdgeInsets.only(right: 8),
+      child: PopupMenuButton<String>(
+        icon: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.08),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
           ),
-          _buildStat('50+', 'Coaches', isDark),
-          Container(
-            width: 1,
-            height: 40,
-            color: AppColors.brandYellow.withValues(alpha: 0.3),
+          child: Text(
+            currentLocale.languageCode.toUpperCase(),
+            style: GoogleFonts.oswald(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
-          _buildStat('10K+', 'Membres', isDark),
+        ),
+        color: const Color(0xFF151515),
+        offset: const Offset(0, 50),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+        ),
+        onSelected: (langCode) {
+          ref.read(languageProvider.notifier).setLocale(langCode);
+        },
+        itemBuilder: (context) => [
+          _buildLangItem('fr', 'Français', currentLocale),
+          _buildLangItem('en', 'English', currentLocale),
+          _buildLangItem('ar', 'العربية', currentLocale),
         ],
       ),
     );
   }
 
-  Widget _buildStat(String value, String label, bool isDark) {
+  PopupMenuItem<String> _buildLangItem(
+    String code,
+    String name,
+    Locale current,
+  ) {
+    final isSelected = current.languageCode == code;
+    return PopupMenuItem<String>(
+      value: code,
+      child: Row(
+        children: [
+          Text(
+            name,
+            style: TextStyle(
+              color: isSelected ? AppColors.brandOrange : Colors.white,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+          if (isSelected) ...[
+            const Spacer(),
+            const Icon(Icons.check, size: 16, color: AppColors.brandOrange),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuButton(BuildContext context, AppLocalizations l10n) {
+    return PopupMenuButton<String>(
+      icon: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.08),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+        ),
+        child: const Icon(Icons.menu, color: Colors.white, size: 22),
+      ),
+      color: const Color(0xFF151515),
+      offset: const Offset(0, 50),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+      ),
+      onSelected: (value) {
+        switch (value) {
+          case 'workouts':
+            context.go(AppRoutes.mobileWorkouts);
+            break;
+          case 'challenges':
+            context.go(AppRoutes.mobileChallenges);
+            break;
+          case 'branches':
+            context.go(AppRoutes.mobileBranches);
+            break;
+          case 'pricing':
+            context.go(AppRoutes.mobilePricing);
+            break;
+          case 'blog':
+            context.go(AppRoutes.mobileBlog);
+            break;
+          case 'contact':
+            context.go(AppRoutes.mobileContact);
+            break;
+          case 'login':
+            context.go(AppRoutes.login);
+            break;
+        }
+      },
+      itemBuilder: (context) => [
+        _menuItem(l10n.navWorkouts, 'workouts', FontAwesomeIcons.dumbbell),
+        _menuItem(l10n.navChallenge, 'challenges', FontAwesomeIcons.fire),
+        _menuItem(l10n.navBranches, 'branches', FontAwesomeIcons.locationDot),
+        _menuItem(l10n.navPricing, 'pricing', FontAwesomeIcons.creditCard),
+        _menuItem(l10n.navBlog, 'blog', FontAwesomeIcons.newspaper),
+        _menuItem(l10n.navContact, 'contact', FontAwesomeIcons.envelope),
+        const PopupMenuDivider(),
+        _menuItem(l10n.navLogin, 'login', FontAwesomeIcons.rightToBracket),
+      ],
+    );
+  }
+
+  PopupMenuItem<String> _menuItem(String label, String value, IconData icon) {
+    return PopupMenuItem<String>(
+      value: value,
+      child: Row(
+        children: [
+          ShaderMask(
+            blendMode: BlendMode.srcIn,
+            shaderCallback: (bounds) =>
+                AppColors.fieryGradient.createShader(bounds),
+            child: FaIcon(icon, size: 16),
+          ),
+          const SizedBox(width: 14),
+          Text(
+            label.toUpperCase(),
+            style: GoogleFonts.oswald(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              letterSpacing: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickStats(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+      color: isDark ? const Color(0xFF111111) : Colors.grey[50],
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _statItem("6", "Branches", isDark),
+          _divider(),
+          _statItem("50+", "Coaches", isDark),
+          _divider(),
+          _statItem("10K+", "Membres", isDark),
+        ],
+      ),
+    );
+  }
+
+  Widget _statItem(String value, String label, bool isDark) {
     return Column(
       children: [
         ShaderMask(
-          shaderCallback: (bounds) => LinearGradient(
-            colors: [AppColors.brandYellow, AppColors.brandOrange],
-          ).createShader(bounds),
+          shaderCallback: (bounds) =>
+              AppColors.fieryGradient.createShader(bounds),
           child: Text(
             value,
             style: GoogleFonts.oswald(
-              fontSize: 32,
+              fontSize: 26,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
@@ -469,77 +554,94 @@ class _MobileLandingPageState extends State<MobileLandingPage> {
         Text(
           label,
           style: GoogleFonts.inter(
-            fontSize: 12,
-            color: isDark ? Colors.grey[400] : Colors.grey[700],
+            fontSize: 11,
+            color: isDark ? Colors.grey[500] : Colors.grey[600],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildFeaturesSection(
-    BuildContext context,
-    AppLocalizations l10n,
-    bool isDark,
-  ) {
+  Widget _divider() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      width: 1,
+      height: 32,
+      color: AppColors.brandYellow.withValues(alpha: 0.2),
+    );
+  }
+
+  Widget _buildFeatures(BuildContext context, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildFeatureCard(
-            icon: FontAwesomeIcons.dumbbell,
-            title: 'Équipements Premium',
-            description: 'Matériel de pointe pour tous vos besoins',
-            color: AppColors.brandYellow,
-            isDark: isDark,
+          Text(
+            "Pourquoi Nous?",
+            style: GoogleFonts.oswald(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black,
+            ),
           ),
           const SizedBox(height: 16),
-          _buildFeatureCard(
-            icon: FontAwesomeIcons.userGraduate,
-            title: 'Coaches Professionnels',
-            description: 'Entraîneurs certifiés et expérimentés',
-            color: const Color(0xFF4CAF50),
-            isDark: isDark,
+          _featureCard(
+            FontAwesomeIcons.dumbbell,
+            "Équipement Premium",
+            "Matériel de dernière génération",
+            isDark,
           ),
-          const SizedBox(height: 16),
-          _buildFeatureCard(
-            icon: FontAwesomeIcons.fire,
-            title: 'Programmes Variés',
-            description: 'Boxing, MMA, Musculation, CrossFit',
-            color: AppColors.brandOrange,
-            isDark: isDark,
+          const SizedBox(height: 12),
+          _featureCard(
+            FontAwesomeIcons.userTie,
+            "Coaches Certifiés",
+            "Entraîneurs professionnels",
+            isDark,
+          ),
+          const SizedBox(height: 12),
+          _featureCard(
+            FontAwesomeIcons.clock,
+            "Accès 24/7",
+            "Ouverts tous les jours",
+            isDark,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFeatureCard({
-    required IconData icon,
-    required String title,
-    required String description,
-    required Color color,
-    required bool isDark,
-  }) {
+  Widget _featureCard(
+    IconData icon,
+    String title,
+    String subtitle,
+    bool isDark,
+  ) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: isDark ? Colors.white10 : Colors.grey[300]!),
       ),
       child: Row(
         children: [
           Container(
-            width: 50,
-            height: 50,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              gradient: AppColors.fieryGradient.scale(0.15),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Center(child: FaIcon(icon, color: color, size: 24)),
+            child: Center(
+              child: ShaderMask(
+                blendMode: BlendMode.srcIn,
+                shaderCallback: (bounds) =>
+                    AppColors.fieryGradient.createShader(bounds),
+                child: FaIcon(icon, size: 20),
+              ),
+            ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -547,17 +649,16 @@ class _MobileLandingPageState extends State<MobileLandingPage> {
                 Text(
                   title,
                   style: GoogleFonts.oswald(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
-                const SizedBox(height: 4),
                 Text(
-                  description,
+                  subtitle,
                   style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: isDark ? Colors.grey[400] : Colors.grey[700],
+                    fontSize: 12,
+                    color: Colors.grey[500],
                   ),
                 ),
               ],
@@ -568,63 +669,245 @@ class _MobileLandingPageState extends State<MobileLandingPage> {
     );
   }
 
-  Widget _buildCTASection(
-    BuildContext context,
-    AppLocalizations l10n,
+  Widget _buildBranchesPreview(BuildContext context, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Nos Branches",
+                style: GoogleFonts.oswald(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+              ),
+              TextButton(
+                onPressed: () => context.go(AppRoutes.webBranches),
+                child: Text(
+                  "Voir tout",
+                  style: GoogleFonts.inter(
+                    color: AppColors.brandOrange,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 140,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                _branchCard("Alger Centre", "Flagship", isDark),
+                const SizedBox(width: 12),
+                _branchCard("Oran", "Premium", isDark),
+                const SizedBox(width: 12),
+                _branchCard("Constantine", "Standard", isDark),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _branchCard(String name, String type, bool isDark) {
+    return Container(
+      width: 140,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.brandYellow.withValues(alpha: 0.2),
+            AppColors.brandOrange.withValues(alpha: 0.1),
+          ],
+        ),
+        border: Border.all(color: AppColors.brandYellow.withValues(alpha: 0.3)),
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppColors.brandYellow,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              type.toUpperCase(),
+              style: GoogleFonts.oswald(
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            name,
+            style: GoogleFonts.oswald(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTestimonials(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
+      color: isDark ? const Color(0xFF0A0A0A) : Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Témoignages",
+            style: GoogleFonts.oswald(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black,
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 180,
+            child: PageView(
+              children: [
+                _testimonialCard(
+                  "Meilleure salle de sport où j'ai jamais été! Les équipements sont de qualité et les coaches sont très professionnels.",
+                  "Karim B.",
+                  "Membre depuis 2 ans",
+                  isDark,
+                ),
+                _testimonialCard(
+                  "Ambiance exceptionnelle et résultats garantis. Je recommande vivement!",
+                  "Sarah M.",
+                  "Membre depuis 1 an",
+                  isDark,
+                ),
+                _testimonialCard(
+                  "Programme de CrossFit incroyable. J'ai atteint tous mes objectifs en 6 mois.",
+                  "Ahmed K.",
+                  "Membre depuis 6 mois",
+                  isDark,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _testimonialCard(
+    String text,
+    String name,
+    String duration,
     bool isDark,
   ) {
     return Container(
-      margin: const EdgeInsets.all(24),
-      padding: const EdgeInsets.all(32),
+      margin: const EdgeInsets.only(right: 12),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.brandYellow, AppColors.brandOrange],
-        ),
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isDark ? Colors.white10 : Colors.grey[300]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: List.generate(
+              5,
+              (index) =>
+                  Icon(Icons.star, color: AppColors.brandYellow, size: 16),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: isDark ? Colors.grey[400] : Colors.grey[700],
+                height: 1.5,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            name,
+            style: GoogleFonts.oswald(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black,
+            ),
+          ),
+          Text(
+            duration,
+            style: GoogleFonts.inter(fontSize: 12, color: Colors.grey[500]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCTA(BuildContext context, bool isDark) {
+    return Container(
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: AppColors.fieryGradient,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [
           Text(
-            'Prêt à Commencer?',
+            "Prêt à Commencer?",
             style: GoogleFonts.oswald(
-              fontSize: 28,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.black,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Text(
-            'Rejoignez la meilleure chaîne de fitness en Algérie',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(fontSize: 14, color: Colors.black87),
+            "Essai gratuit de 7 jours",
+            style: GoogleFonts.inter(fontSize: 13, color: Colors.black87),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () => context.go(AppRoutes.webBranches),
+              onPressed: () => context.go(AppRoutes.register),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'VOIR NOS BRANCHES',
-                    style: GoogleFonts.oswald(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.arrow_forward, size: 18),
-                ],
+              child: Text(
+                "S'INSCRIRE MAINTENANT",
+                style: GoogleFonts.oswald(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 1,
+                ),
               ),
             ),
           ),
@@ -633,51 +916,72 @@ class _MobileLandingPageState extends State<MobileLandingPage> {
     );
   }
 
-  Widget _buildFooter(
-    BuildContext context,
-    AppLocalizations l10n,
-    bool isDark,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      color: isDark ? Colors.black : Colors.grey[200],
-      child: Column(
-        children: [
-          Text(
-            '© 2025 GYM ÉLYSÉE DZ',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              color: isDark ? Colors.grey[600] : Colors.grey[700],
+  // Footer implementation moved to WebFooter widget
+}
+
+class _PrimaryButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _PrimaryButton({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.brandYellow,
+          foregroundColor: Colors.black,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          elevation: 4,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.oswald(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
+              ),
             ),
+            const SizedBox(width: 8),
+            const Icon(Icons.arrow_forward, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SecondaryButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _SecondaryButton({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton(
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.oswald(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+            letterSpacing: 1,
           ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextButton(
-                onPressed: () => context.go(AppRoutes.webContact),
-                child: Text(
-                  'Contact',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: AppColors.brandYellow,
-                  ),
-                ),
-              ),
-              Text('•', style: TextStyle(color: Colors.grey[600])),
-              TextButton(
-                onPressed: () {},
-                child: Text(
-                  'Privacy',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: AppColors.brandYellow,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }

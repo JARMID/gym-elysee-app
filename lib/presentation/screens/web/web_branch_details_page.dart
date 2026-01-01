@@ -7,6 +7,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:gyelyseedz/l10n/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../widgets/web/web_footer.dart';
+import '../../widgets/web/web_back_to_top_fab.dart';
+
 import '../../providers/landing_providers.dart';
 import '../../providers/theme_provider.dart';
 import '../../widgets/web/web_nav_bar.dart';
@@ -107,6 +109,9 @@ class _WebBranchDetailsPageState extends ConsumerState<WebBranchDetailsPage> {
     final isRamadanMode = ref.watch(ramadanModeProvider);
     final l10n = AppLocalizations.of(context)!;
 
+    // Mobile breakpoint
+    final isMobile = MediaQuery.of(context).size.width < 900;
+
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
       body: branchesAsync.when(
@@ -145,158 +150,41 @@ class _WebBranchDetailsPageState extends ConsumerState<WebBranchDetailsPage> {
                     _buildHero(context, branch, isRamadanMode, l10n),
 
                     Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 60,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 20 : 60,
                         vertical: 60,
                       ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: Column(
+                      child: isMobile
+                          ? Column(
+                              children: [
+                                _buildLeftContent(branch, l10n, isMobile),
+                                const SizedBox(height: 60),
+                                _buildRightContent(branch, l10n),
+                              ],
+                            )
+                          : Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                FadeInUp(
-                                  duration: const Duration(milliseconds: 600),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      _buildSectionTitle(l10n.branchAbout),
-                                      const SizedBox(height: 20),
-                                      Text(
-                                        branch.description,
-                                        style: GoogleFonts.inter(
-                                          fontSize: 18,
-                                          color: Colors.grey[400],
-                                          height: 1.6,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 60),
-                                FadeInUp(
-                                  delay: const Duration(milliseconds: 200),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      _buildSectionTitle(l10n.branchGallery),
-                                      const SizedBox(height: 30),
-                                      _buildGallery(
-                                        branch.photos.isNotEmpty
-                                            ? branch.photos
-                                            : ['branch_${branch.type}.jpg'],
-                                        branch.type,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 60),
-                                FadeInUp(
-                                  delay: const Duration(milliseconds: 400),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      _buildSectionTitle(l10n.branchEquipments),
-                                      const SizedBox(height: 30),
-                                      _buildEquipments(branch.equipment),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 60),
-
-                                // New: Coaches Section
-                                FadeInUp(
-                                  delay: const Duration(milliseconds: 600),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      _buildSectionTitle(l10n.branchTeam),
-                                      const SizedBox(height: 30),
-                                      _buildCoaches(branch, l10n),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 60),
-
-                                // New: Programs Section (if any)
-                                if (branch.programs != null &&
-                                    branch.programs!.isNotEmpty) ...[
-                                  FadeInUp(
-                                    delay: const Duration(milliseconds: 700),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        _buildSectionTitle(l10n.programsTitle),
-                                        const SizedBox(height: 30),
-                                        _buildPrograms(branch.programs!),
-                                        const SizedBox(height: 60),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                                const SizedBox(height: 60),
-
-                                // New: Location Map
-                                FadeInUp(
-                                  delay: const Duration(milliseconds: 800),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      _buildSectionTitle(l10n.branchLocation),
-                                      const SizedBox(height: 30),
-                                      _buildMapSection(branch),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 60),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 60),
-                          Expanded(
-                            child: Column(
-                              children: [
-                                FadeInRight(
-                                  delay: const Duration(milliseconds: 200),
-                                  child: _buildHoursCard(
-                                    branch.openingHours,
-                                    branch.ramadanHours,
+                                Expanded(
+                                  flex: 2,
+                                  child: _buildLeftContent(
+                                    branch,
                                     l10n,
+                                    isMobile,
                                   ),
                                 ),
-                                const SizedBox(height: 30),
-                                FadeInRight(
-                                  delay: const Duration(milliseconds: 400),
-                                  child: _buildContactCard(branch, l10n),
-                                ),
-                                const SizedBox(height: 30),
-                                FadeInRight(
-                                  delay: const Duration(milliseconds: 600),
-                                  child: _buildVisitForm(l10n),
-                                ),
-                                const SizedBox(height: 30),
-                                FadeInRight(
-                                  delay: const Duration(milliseconds: 800),
-                                  child: _buildReviewsCard(l10n),
+                                const SizedBox(width: 60),
+                                Expanded(
+                                  child: _buildRightContent(branch, l10n),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
-                      ),
                     ),
                     const WebFooter(),
                   ],
                 ),
               ),
+
               Positioned(
                 top: 0,
                 left: 0,
@@ -316,6 +204,143 @@ class _WebBranchDetailsPageState extends ConsumerState<WebBranchDetailsPage> {
           ),
         ),
       ),
+      floatingActionButton: WebBackToTopFAB(
+        scrollController: _scrollController,
+      ),
+    );
+  }
+
+  Widget _buildLeftContent(
+    BranchModel branch,
+    AppLocalizations l10n,
+    bool isMobile,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        FadeInUp(
+          duration: const Duration(milliseconds: 600),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionTitle(l10n.branchAbout),
+              const SizedBox(height: 20),
+              Text(
+                branch.description,
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  color: Colors.grey[400],
+                  height: 1.6,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 60),
+        FadeInUp(
+          delay: const Duration(milliseconds: 200),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionTitle(l10n.branchGallery),
+              const SizedBox(height: 30),
+              _buildGallery(
+                branch.photos.isNotEmpty
+                    ? branch.photos
+                    : ['branch_${branch.type}.jpg'],
+                branch.type,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 60),
+        FadeInUp(
+          delay: const Duration(milliseconds: 400),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionTitle(l10n.branchEquipments),
+              const SizedBox(height: 30),
+              _buildEquipments(branch.equipment),
+            ],
+          ),
+        ),
+        const SizedBox(height: 60),
+
+        // Coaches Section
+        FadeInUp(
+          delay: const Duration(milliseconds: 600),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionTitle(l10n.branchTeam),
+              const SizedBox(height: 30),
+              _buildCoaches(branch, l10n),
+            ],
+          ),
+        ),
+        const SizedBox(height: 60),
+
+        // Programs Section (if any)
+        if (branch.programs != null && branch.programs!.isNotEmpty) ...[
+          FadeInUp(
+            delay: const Duration(milliseconds: 700),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSectionTitle(l10n.programsTitle),
+                const SizedBox(height: 30),
+                _buildPrograms(branch.programs!),
+                const SizedBox(height: 60),
+              ],
+            ),
+          ),
+        ],
+
+        // Location Map
+        FadeInUp(
+          delay: const Duration(milliseconds: 800),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionTitle(l10n.branchLocation),
+              const SizedBox(height: 30),
+              _buildMapSection(branch),
+            ],
+          ),
+        ),
+        const SizedBox(height: 60),
+      ],
+    );
+  }
+
+  Widget _buildRightContent(BranchModel branch, AppLocalizations l10n) {
+    return Column(
+      children: [
+        FadeInRight(
+          delay: const Duration(milliseconds: 200),
+          child: _buildHoursCard(
+            branch.openingHours,
+            branch.ramadanHours,
+            l10n,
+          ),
+        ),
+        const SizedBox(height: 30),
+        FadeInRight(
+          delay: const Duration(milliseconds: 400),
+          child: _buildContactCard(branch, l10n),
+        ),
+        const SizedBox(height: 30),
+        FadeInRight(
+          delay: const Duration(milliseconds: 600),
+          child: _buildVisitForm(l10n),
+        ),
+        const SizedBox(height: 30),
+        FadeInRight(
+          delay: const Duration(milliseconds: 800),
+          child: _buildReviewsCard(l10n),
+        ),
+      ],
     );
   }
 

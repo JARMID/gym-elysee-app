@@ -6,21 +6,21 @@ import 'package:gyelyseedz/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../widgets/web/web_nav_bar.dart';
-import '../../widgets/web/web_footer.dart';
+import '../../widgets/web/web_page_shell.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/theme_provider.dart';
 
 class WebPartnersPage extends ConsumerWidget {
   const WebPartnersPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isRamadanMode = ref.watch(ramadanModeProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
+
+    // Check if mobile
+    final isMobile = MediaQuery.of(context).size.width < 800;
 
     final partners = [
       _Partner(
@@ -81,127 +81,190 @@ class WebPartnersPage extends ConsumerWidget {
       ),
     ];
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: Stack(
+    return WebPageShell(
+      activeRoute: AppRoutes.webPartners,
+      child: Column(
         children: [
-          SingleChildScrollView(
+          // Hero Section
+          // Hero Section
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 80),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.black,
+                  isDark ? AppColors.darkBackground : Colors.grey[100]!,
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
             child: Column(
               children: [
-                SizedBox(height: WebNavBar.getHeight(isRamadanMode) + 20),
-                // Hero Section
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 80),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.black,
-                        isDark ? AppColors.darkBackground : Colors.grey[100]!,
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
+                FadeInDown(
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.brandOrange.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const FaIcon(
+                      FontAwesomeIcons.handshake,
+                      size: 50,
+                      color: AppColors.brandOrange,
                     ),
                   ),
-                  child: Column(
+                ),
+                const SizedBox(height: 32),
+                FadeInDown(
+                  delay: const Duration(milliseconds: 200),
+                  child: Text(
+                    l10n.partnersTitleFirst,
+                    style: GoogleFonts.oswald(
+                      fontSize: isMobile ? 48 : 60,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      height: 1.0,
+                    ),
+                  ),
+                ),
+                FadeInDown(
+                  delay: const Duration(milliseconds: 300),
+                  child: ShaderMask(
+                    blendMode: BlendMode.srcIn,
+                    shaderCallback: (bounds) =>
+                        AppColors.fieryGradient.createShader(bounds),
+                    child: Text(
+                      l10n.partnersTitleSecond,
+                      style: GoogleFonts.oswald(
+                        fontSize: isMobile ? 48 : 60,
+                        fontWeight: FontWeight.bold,
+                        height: 1.0,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                FadeInDown(
+                  delay: const Duration(milliseconds: 400),
+                  child: Text(
+                    l10n.partnersSubtitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      color: Colors.grey[400],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Partners Grid
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 20 : 80,
+              vertical: 60,
+            ),
+            child: GridView.builder(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: isMobile ? 2 : 4,
+                crossAxisSpacing: 24,
+                mainAxisSpacing: 24,
+                childAspectRatio: isMobile ? 0.8 : 1.0,
+              ),
+              itemCount: partners.length,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemBuilder: (context, index) {
+                final partner = partners[index];
+                return FadeInUp(
+                  delay: Duration(milliseconds: index * 100),
+                  child: _PartnerCard(partner: partner, isDark: isDark),
+                );
+              },
+            ),
+          ),
+
+          // CTA Section
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 80, vertical: 40),
+            padding: const EdgeInsets.all(60),
+            decoration: BoxDecoration(
+              gradient: AppColors.fieryGradient,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: isMobile
+                ? Column(
                     children: [
-                      FadeInDown(
-                        child: Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: AppColors.brandOrange.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const FaIcon(
-                            FontAwesomeIcons.handshake,
-                            size: 50,
-                            color: AppColors.brandOrange,
-                          ),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: const BoxDecoration(
+                          color: Colors.black,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const FaIcon(
+                          FontAwesomeIcons.handshake,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.partnersCtaTitle,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.oswald(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        l10n.partnersCtaText,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          color: Colors.black87,
                         ),
                       ),
                       const SizedBox(height: 32),
-                      FadeInDown(
-                        delay: const Duration(milliseconds: 200),
-                        child: Text(
-                          l10n.partnersTitleFirst,
-                          style: GoogleFonts.oswald(
-                            fontSize: 60,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            height: 1.0,
+                      ElevatedButton(
+                        onPressed: () => context.go(AppRoutes.webContact),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24, // Reduced padding
+                            vertical: 20,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                      ),
-                      FadeInDown(
-                        delay: const Duration(milliseconds: 300),
-                        child: ShaderMask(
-                          blendMode: BlendMode.srcIn,
-                          shaderCallback: (bounds) =>
-                              AppColors.fieryGradient.createShader(bounds),
-                          child: Text(
-                            l10n.partnersTitleSecond,
-                            style: GoogleFonts.oswald(
-                              fontSize: 60,
-                              fontWeight: FontWeight.bold,
-                              height: 1.0,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              // Added Flexible
+                              child: Text(
+                                l10n.partnersCtaButton,
+                                textAlign:
+                                    TextAlign.center, // Center text if it wraps
+                                style: GoogleFonts.oswald(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      FadeInDown(
-                        delay: const Duration(milliseconds: 400),
-                        child: Text(
-                          l10n.partnersSubtitle,
-                          style: GoogleFonts.inter(
-                            fontSize: 18,
-                            color: Colors.grey[400],
-                          ),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.arrow_forward, size: 18),
+                          ],
                         ),
                       ),
                     ],
-                  ),
-                ),
-
-                // Partners Grid
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 80,
-                    vertical: 60,
-                  ),
-                  child: GridView.builder(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 4,
-                          crossAxisSpacing: 24,
-                          mainAxisSpacing: 24,
-                          childAspectRatio: 1.0,
-                        ),
-                    itemCount: partners.length,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemBuilder: (context, index) {
-                      final partner = partners[index];
-                      return FadeInUp(
-                        delay: Duration(milliseconds: index * 100),
-                        child: _PartnerCard(partner: partner, isDark: isDark),
-                      );
-                    },
-                  ),
-                ),
-
-                // CTA Section
-                Container(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 80,
-                    vertical: 40,
-                  ),
-                  padding: const EdgeInsets.all(60),
-                  decoration: BoxDecoration(
-                    gradient: AppColors.fieryGradient,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Row(
+                  )
+                : Row(
                     children: [
                       Expanded(
                         child: Column(
@@ -257,19 +320,9 @@ class WebPartnersPage extends ConsumerWidget {
                       ),
                     ],
                   ),
-                ),
+          ),
 
-                const SizedBox(height: 40),
-                const WebFooter(),
-              ],
-            ),
-          ),
-          const Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: WebNavBar(isScrolled: true),
-          ),
+          const SizedBox(height: 40),
         ],
       ),
     );

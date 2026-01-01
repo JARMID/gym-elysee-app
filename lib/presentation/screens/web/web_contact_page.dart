@@ -7,11 +7,9 @@ import 'package:gyelyseedz/l10n/app_localizations.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/error_handler.dart';
-import '../../widgets/web/web_footer.dart';
 import '../../providers/landing_providers.dart';
-import '../../providers/theme_provider.dart';
+import '../../widgets/web/web_page_shell.dart';
 import '../../widgets/web/web_map_section.dart';
-import '../../widgets/web/web_nav_bar.dart';
 
 class WebContactPage extends ConsumerStatefulWidget {
   const WebContactPage({super.key});
@@ -84,345 +82,124 @@ class _WebContactPageState extends ConsumerState<WebContactPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isRamadanMode = ref.watch(ramadanModeProvider);
+    // Check if mobile
+    final isMobile = MediaQuery.of(context).size.width < 800;
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: Stack(
+    return WebPageShell(
+      activeRoute: AppRoutes.webContact,
+      child: Column(
         children: [
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                SizedBox(height: isRamadanMode ? 130 : 80),
-
-                // Header
-                FadeInDown(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 80),
-                    child: Column(
-                      children: [
-                        Text(
-                          l10n.contactTitleFirst,
-                          style: GoogleFonts.oswald(
-                            fontSize: 60,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black,
-                          ),
-                        ),
-                        ShaderMask(
-                          blendMode: BlendMode.srcIn,
-                          shaderCallback: (bounds) =>
-                              AppColors.fieryGradient.createShader(bounds),
-                          child: Text(
-                            l10n.contactTitleSecond,
-                            style: GoogleFonts.oswald(
-                              fontSize: 60,
-                              fontWeight: FontWeight.bold,
-                              height: 1.0,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: 800,
-                          child: Text(
-                            l10n.contactSubtitle,
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.inter(
-                              fontSize: 18,
-                              color: isDark
-                                  ? Colors.grey[400]
-                                  : Colors.grey[700],
-                              height: 1.5,
-                            ),
-                          ),
-                        ),
-                      ],
+          // Header
+          FadeInDown(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 80),
+              child: Column(
+                children: [
+                  Text(
+                    l10n.contactTitleFirst,
+                    style: GoogleFonts.oswald(
+                      fontSize: isMobile ? 48 : 60,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black,
                     ),
                   ),
-                ),
+                  ShaderMask(
+                    blendMode: BlendMode.srcIn,
+                    shaderCallback: (bounds) =>
+                        AppColors.fieryGradient.createShader(bounds),
+                    child: Text(
+                      l10n.contactTitleSecond,
+                      style: GoogleFonts.oswald(
+                        fontSize: isMobile ? 48 : 60,
+                        fontWeight: FontWeight.bold,
+                        height: 1.0,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: isMobile ? double.infinity : 800,
+                    child: Text(
+                      l10n.contactSubtitle,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(
+                        fontSize: isMobile ? 16 : 18,
+                        color: isDark ? Colors.grey[400] : Colors.grey[700],
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
 
-                // Main Content
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 100,
-                  ).copyWith(bottom: 100),
-                  child: Row(
+          // Main Content
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 24 : 100,
+            ).copyWith(bottom: 100),
+            child: isMobile
+                ? Column(
+                    children: [
+                      // Mobile: Form First
+                      FadeInLeft(
+                        child: _buildContactForm(l10n, isDark, isMobile),
+                      ),
+                      const SizedBox(height: 60),
+                      // Mobile: Info Cards Second
+                      FadeInRight(child: _buildInfoCards(l10n, isDark)),
+                    ],
+                  )
+                : Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Left: Form
+                      // Desktop: Left Form
                       Expanded(
                         flex: 6,
                         child: FadeInLeft(
-                          child: Container(
-                            padding: const EdgeInsets.all(40),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? const Color(0xFF0F0F0F)
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: isDark
-                                    ? AppColors.brandOrange.withValues(
-                                        alpha: 0.3,
-                                      )
-                                    : Colors.grey[300]!,
-                              ),
-                              boxShadow: isDark
-                                  ? null
-                                  : [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.05,
-                                        ),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 5),
-                                      ),
-                                    ],
-                            ),
-                            child: Form(
-                              key: _formKey,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.send_outlined,
-                                        color: AppColors
-                                            .brandOrange, // Updated to Orange
-                                        size: 24,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Text(
-                                        l10n.contactFormTitle,
-                                        style: GoogleFonts.oswald(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold,
-                                          color: isDark
-                                              ? Colors.white
-                                              : Colors.black,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 40),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: _buildTextField(
-                                          l10n.contactNameLabel,
-                                          l10n.contactNameHint,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 24),
-                                      Expanded(
-                                        child: _buildTextField(
-                                          l10n.contactEmailLabel,
-                                          l10n.contactEmailPlaceholder,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 24),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: _buildTextField(
-                                          l10n.contactPhoneLabel,
-                                          l10n.contactPhonePlaceholder,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 24),
-                                      Expanded(
-                                        child: _buildDropdown(
-                                          l10n.contactBranchLabel,
-                                          [
-                                            l10n.navAlgiers,
-                                            l10n.navOran,
-                                            l10n.navConstantine,
-                                          ],
-                                          l10n.contactBranchPlaceholder,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 24),
-                                  _buildTextField(
-                                    l10n.contactMessageLabel,
-                                    l10n.contactMessageHint,
-                                    maxLines: 5,
-                                  ),
-                                  const SizedBox(height: 40),
-                                  _AnimatedSubmitButton(
-                                    label: l10n.contactSendButton,
-                                    isLoading: _isLoading,
-                                    onTap: _submitForm,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                          child: _buildContactForm(l10n, isDark, isMobile),
                         ),
                       ),
-
                       const SizedBox(width: 40),
-
-                      // Right: Info Cards
+                      // Desktop: Right Info
                       Expanded(
                         flex: 4,
                         child: FadeInRight(
-                          child: Column(
-                            children: [
-                              // WhatsApp Card
-                              _InteractiveInfoCard(
-                                accentColor: Colors.green,
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: Colors.green.withValues(
-                                          alpha: 0.1,
-                                        ),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color: Colors.green.withValues(
-                                            alpha: 0.3,
-                                          ),
-                                        ),
-                                      ),
-                                      child: const FaIcon(
-                                        FontAwesomeIcons.whatsapp,
-                                        color: Colors.green,
-                                        size: 28,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 20),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          l10n.contactWhatsappTitle,
-                                          style: GoogleFonts.oswald(
-                                            color: isDark
-                                                ? Colors.white
-                                                : Colors.black,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          l10n.contactWhatsappSubtitle,
-                                          style: GoogleFonts.inter(
-                                            color: isDark
-                                                ? Colors.grey[500]
-                                                : Colors.grey[600],
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                        Text(
-                                          '+213 555 123 456',
-                                          style: GoogleFonts.inter(
-                                            color: Colors.green,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-
-                              // Info Card
-                              _InteractiveInfoCard(
-                                title: l10n.contactInfoTitle,
-                                child: Column(
-                                  children: [
-                                    _buildContactRow(
-                                      Icons.phone_outlined,
-                                      l10n.contactPhone,
-                                      l10n.contactPhoneValue,
-                                    ),
-                                    const SizedBox(height: 24),
-                                    _buildContactRow(
-                                      Icons.email_outlined,
-                                      l10n.contactEmailLabel,
-                                      l10n.contactEmailValue,
-                                    ),
-                                    const SizedBox(height: 24),
-                                    _buildContactRow(
-                                      Icons.access_time,
-                                      l10n.contactHours,
-                                      l10n.contactHoursValue,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-
-                              // Address Card
-                              _InteractiveInfoCard(
-                                title: l10n.contactAddressTitle,
-                                child: _buildContactRow(
-                                  Icons.location_on_outlined,
-                                  'GYM ÉLYSÉE DZ',
-                                  l10n.contactAddressValue,
-                                ),
-                              ),
-                            ],
-                          ),
+                          child: _buildInfoCards(l10n, isDark),
                         ),
                       ),
                     ],
                   ),
-                ),
-
-                const SizedBox(height: 60),
-                Column(
-                  children: [
-                    Text(
-                      l10n.contactFindUsTitle,
-                      style: GoogleFonts.oswald(
-                        fontSize: 40,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.brandYellow,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.contactFindUsSubtitle,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        color: isDark ? Colors.white : Colors.black,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 40),
-                const WebMapSection(),
-
-                const WebFooter(),
-              ],
-            ),
           ),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: WebNavBar(
-              isScrolled: true,
-              activeRoute: AppRoutes.webContact,
-            ),
+
+          const SizedBox(height: 60),
+          Column(
+            children: [
+              Text(
+                l10n.contactFindUsTitle,
+                style: GoogleFonts.oswald(
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.brandYellow,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.contactFindUsSubtitle,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: isDark ? Colors.white : Colors.black,
+                  letterSpacing: 2,
+                ),
+              ),
+            ],
           ),
+          const SizedBox(height: 40),
+          const WebMapSection(),
         ],
       ),
     );
@@ -574,6 +351,225 @@ class _WebContactPageState extends ConsumerState<WebContactPage> {
               .map((e) => DropdownMenuItem(value: e, child: Text(e)))
               .toList(),
           onChanged: (val) {},
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContactForm(AppLocalizations l10n, bool isDark, bool isMobile) {
+    return Container(
+      padding: EdgeInsets.all(isMobile ? 24 : 40),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F0F0F) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark
+              ? AppColors.brandOrange.withValues(alpha: 0.3)
+              : Colors.grey[300]!,
+        ),
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.send_outlined,
+                  color: AppColors.brandOrange, // Updated to Orange
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    l10n.contactFormTitle,
+                    style: GoogleFonts.oswald(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 40),
+            if (isMobile) ...[
+              _buildTextField(l10n.contactNameLabel, l10n.contactNameHint),
+              const SizedBox(height: 24),
+              _buildTextField(
+                l10n.contactEmailLabel,
+                l10n.contactEmailPlaceholder,
+              ),
+            ] else
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      l10n.contactNameLabel,
+                      l10n.contactNameHint,
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    child: _buildTextField(
+                      l10n.contactEmailLabel,
+                      l10n.contactEmailPlaceholder,
+                    ),
+                  ),
+                ],
+              ),
+            const SizedBox(height: 24),
+            if (isMobile) ...[
+              _buildTextField(
+                l10n.contactPhoneLabel,
+                l10n.contactPhonePlaceholder,
+              ),
+              const SizedBox(height: 24),
+              _buildDropdown(l10n.contactBranchLabel, [
+                l10n.navAlgiers,
+                l10n.navOran,
+                l10n.navConstantine,
+              ], l10n.contactBranchPlaceholder),
+            ] else
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      l10n.contactPhoneLabel,
+                      l10n.contactPhonePlaceholder,
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    child: _buildDropdown(l10n.contactBranchLabel, [
+                      l10n.navAlgiers,
+                      l10n.navOran,
+                      l10n.navConstantine,
+                    ], l10n.contactBranchPlaceholder),
+                  ),
+                ],
+              ),
+            const SizedBox(height: 24),
+            _buildTextField(
+              l10n.contactMessageLabel,
+              l10n.contactMessageHint,
+              maxLines: 5,
+            ),
+            const SizedBox(height: 40),
+            _AnimatedSubmitButton(
+              label: l10n.contactSendButton,
+              isLoading: _isLoading,
+              onTap: _submitForm,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoCards(AppLocalizations l10n, bool isDark) {
+    return Column(
+      children: [
+        // WhatsApp Card
+        _InteractiveInfoCard(
+          accentColor: Colors.green,
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.green.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: const FaIcon(
+                  FontAwesomeIcons.whatsapp,
+                  color: Colors.green,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 20),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.contactWhatsappTitle,
+                    style: GoogleFonts.oswald(
+                      color: isDark ? Colors.white : Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.contactWhatsappSubtitle,
+                    style: GoogleFonts.inter(
+                      color: isDark ? Colors.grey[500] : Colors.grey[600],
+                      fontSize: 12,
+                    ),
+                  ),
+                  Text(
+                    '+213 555 123 456',
+                    style: GoogleFonts.inter(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        // Info Card
+        _InteractiveInfoCard(
+          title: l10n.contactInfoTitle,
+          child: Column(
+            children: [
+              _buildContactRow(
+                Icons.phone_outlined,
+                l10n.contactPhone,
+                l10n.contactPhoneValue,
+              ),
+              const SizedBox(height: 24),
+              _buildContactRow(
+                Icons.email_outlined,
+                l10n.contactEmailLabel,
+                l10n.contactEmailValue,
+              ),
+              const SizedBox(height: 24),
+              _buildContactRow(
+                Icons.access_time,
+                l10n.contactHours,
+                l10n.contactHoursValue,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        // Address Card
+        _InteractiveInfoCard(
+          title: l10n.contactAddressTitle,
+          child: _buildContactRow(
+            Icons.location_on_outlined,
+            'GYM ÉLYSÉE DZ',
+            l10n.contactAddressValue,
+          ),
         ),
       ],
     );
