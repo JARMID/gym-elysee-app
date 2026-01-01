@@ -44,7 +44,7 @@ void main() async {
 
   // TODO: Migration - ApiService will be replaced by SupabaseClient
   final apiService = ApiService(storageService);
-  final authRepository = AuthRepository(apiService, storageService);
+  final authRepository = AuthRepository(storageService);
 
   // Check initial theme preference
   final isDark = await storageService.isDarkModeEnabled();
