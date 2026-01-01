@@ -241,4 +241,113 @@ class SupabaseCoreRepository {
     }
     return {};
   }
+
+  // ============ SUBSCRIPTIONS ============
+
+  /// Get current user's active subscription
+  Future<Map<String, dynamic>?> getMySubscription() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw const AuthException();
+
+    try {
+      final response = await _client
+          .from('subscriptions')
+          .select('''
+        *,
+        plan:membership_plans!plan_id(name, price, duration_months)
+      ''')
+          .eq('user_id', userId)
+          .order('created_at', ascending: false)
+          .limit(1);
+
+      if (response.isEmpty) return null;
+
+      final subscription = response.first;
+      final endDate = DateTime.parse(subscription['end_date']);
+      final daysLeft = endDate.difference(DateTime.now()).inDays;
+
+      return {
+        ...subscription,
+        'daysLeft': daysLeft > 0 ? daysLeft : 0,
+        'isActive': subscription['status'] == 'active' && daysLeft > 0,
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Subscribe to a membership plan
+  Future<void> subscribe(int planId, {String paymentMethod = 'cash'}) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw const AuthException();
+
+    try {
+      // Get plan details to calculate end date
+      final plan = await getMembershipPlanById(planId);
+      final startDate = DateTime.now();
+      final endDate = DateTime(
+        startDate.year,
+        startDate.month + plan.durationMonths,
+        startDate.day,
+      );
+
+      // Create subscription
+      await _client.from('subscriptions').insert({
+        'user_id': userId,
+        'plan_id': planId,
+        'start_date': startDate.toIso8601String(),
+        'end_date': endDate.toIso8601String(),
+        'status': 'pending', // Admin needs to verify payment
+      });
+
+      // Note: Payment record would be created separately in Phase 5
+    } catch (e) {
+      throw const ServerException();
+    }
+  }
+
+  // ============ BOOKINGS ============
+
+  /// Get user's upcoming bookings
+  Future<List<Map<String, dynamic>>> getMyBookings() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw const AuthException();
+
+    try {
+      final response = await _client
+          .from('bookings')
+          .select('''
+        *,
+        program:programs!program_id(
+          title,
+          description,
+          coach:profiles!coach_id(first_name, last_name),
+          branch:branches!branch_id(name)
+        )
+      ''')
+          .eq('user_id', userId)
+          .eq('status', 'confirmed')
+          .order('booking_date');
+
+      return (response as List).cast<Map<String, dynamic>>();
+    } catch (e) {
+      throw const ServerException();
+    }
+  }
+
+  /// Cancel a booking
+  Future<void> cancelBooking(int bookingId) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw const AuthException();
+
+    try {
+      await _client
+          .from('bookings')
+          .update({'status': 'cancelled'})
+          .eq('id', bookingId)
+          .eq('user_id', userId); // Ensure user owns this booking
+    } catch (e) {
+      throw const ServerException();
+    }
+  }
 }
