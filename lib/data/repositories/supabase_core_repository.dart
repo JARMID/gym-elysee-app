@@ -350,4 +350,192 @@ class SupabaseCoreRepository {
       throw const ServerException();
     }
   }
+
+  // ============ PAYMENTS & STORAGE (Phase 5) ============
+
+  /// Submit payment with proof image
+  /// Returns the payment ID
+  Future<int> submitPayment({
+    required int subscriptionId,
+    required double amount,
+    required String method, // 'cash', 'cib', 'edahabia'
+    Uint8List? proofImage,
+    String? proofImageExtension,
+  }) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw const AuthException();
+
+    try {
+      String? proofImageUrl;
+
+      // Upload proof image if provided (for CIB/Edahabia)
+      if (proofImage != null && proofImageExtension != null) {
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final storagePath =
+            '$userId/payments/proof_$timestamp.$proofImageExtension';
+
+        await _client.storage
+            .from('payments')
+            .uploadBinary(
+              storagePath,
+              proofImage,
+              fileOptions: const sb.FileOptions(upsert: false),
+            );
+
+        proofImageUrl = _client.storage
+            .from('payments')
+            .getPublicUrl(storagePath);
+      }
+
+      // Create payment record
+      final response = await _client.from('payments').insert({
+        'user_id': userId,
+        'subscription_id': subscriptionId,
+        'amount': amount,
+        'method': method,
+        'proof_image_url': proofImageUrl,
+        'status': 'pending', // Admin will verify
+      }).select();
+
+      return response.first['id'] as int;
+    } catch (e) {
+      throw const ServerException();
+    }
+  }
+
+  /// Get user's payment history
+  Future<List<Map<String, dynamic>>> getMyPayments() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw const AuthException();
+
+    try {
+      final response = await _client
+          .from('payments')
+          .select('''
+        *,
+        subscription:subscriptions!subscription_id(
+          plan:membership_plans!plan_id(name)
+        )
+      ''')
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+
+      return (response as List).cast<Map<String, dynamic>>();
+    } catch (e) {
+      throw const ServerException();
+    }
+  }
+
+  // ============ SOCIAL FEED & REAL-TIME (Phase 6) ============
+
+  /// Get social feed posts (with real-time support)
+  Future<List<Map<String, dynamic>>> getFeedPosts({int limit = 20}) async {
+    try {
+      final response = await _client
+          .from('posts')
+          .select('''
+        *,
+        user:profiles!user_id(first_name, last_name, avatar_url),
+        likes:post_likes(count),
+        comments(count)
+      ''')
+          .order('created_at', ascending: false)
+          .limit(limit);
+
+      return (response as List).cast<Map<String, dynamic>>();
+    } catch (e) {
+      throw const ServerException();
+    }
+  }
+
+  /// Stream social feed posts (real-time)
+  Stream<List<Map<String, dynamic>>> streamFeedPosts() {
+    return _client
+        .from('posts')
+        .stream(primaryKey: ['id'])
+        .order('created_at')
+        .map((data) => data.cast<Map<String, dynamic>>());
+  }
+
+  /// Create a new post
+  Future<void> createPost({required String content, String? imageUrl}) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw const AuthException();
+
+    try {
+      await _client.from('posts').insert({
+        'user_id': userId,
+        'content': content,
+        'image_url': imageUrl,
+      });
+    } catch (e) {
+      throw const ServerException();
+    }
+  }
+
+  /// Toggle like on a post
+  Future<void> toggleLike(int postId) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw const AuthException();
+
+    try {
+      // Check if already liked
+      final existing = await _client
+          .from('post_likes')
+          .select()
+          .eq('post_id', postId)
+          .eq('user_id', userId);
+
+      if (existing.isEmpty) {
+        // Add like
+        await _client.from('post_likes').insert({
+          'post_id': postId,
+          'user_id': userId,
+        });
+      } else {
+        // Remove like
+        await _client
+            .from('post_likes')
+            .delete()
+            .eq('post_id', postId)
+            .eq('user_id', userId);
+      }
+    } catch (e) {
+      throw const ServerException();
+    }
+  }
+
+  /// Add comment to a post
+  Future<void> addComment(int postId, String content) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw const AuthException();
+
+    try {
+      await _client.from('comments').insert({
+        'post_id': postId,
+        'user_id': userId,
+        'content': content,
+      });
+    } catch (e) {
+      throw const ServerException();
+    }
+  }
+
+  /// Get comments for a post
+  Future<List<Map<String, dynamic>>> getComments(int postId) async {
+    try {
+      final response = await _client
+          .from('comments')
+          .select('''
+        *,
+        user:profiles!user_id(first_name, last_name, avatar_url)
+      ''')
+          .eq('post_id', postId)
+          .order('created_at');
+
+      return (response as List).cast<Map<String, dynamic>>();
+    } catch (e) {
+      throw const ServerException();
+    }
+  }
 }
