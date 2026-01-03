@@ -10,6 +10,7 @@ import '../../../core/routing/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/language_provider.dart';
+import '../../providers/auth_provider.dart';
 import 'web_hover_menu.dart';
 import 'web_settings_dialog.dart';
 import 'web_ramadan_banner.dart';
@@ -180,7 +181,21 @@ class WebNavBar extends ConsumerWidget {
                       const SizedBox(width: 12),
                       _AnimatedIconButton(
                         icon: Icons.person_outline,
-                        onPressed: () => context.go(AppRoutes.login),
+                        onPressed: () {
+                          final authState = ref.read(authNotifierProvider);
+                          if (authState.isAuthenticated) {
+                            final userRole = authState.user?.type;
+                            if (userRole == 'admin') {
+                              context.go(AppRoutes.admin);
+                            } else if (userRole == 'coach') {
+                              context.go(AppRoutes.coach);
+                            } else {
+                              context.go(AppRoutes.memberDashboard);
+                            }
+                          } else {
+                            context.go(AppRoutes.login);
+                          }
+                        },
                         isAccent: true,
                       ),
                     ],

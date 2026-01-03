@@ -13,7 +13,7 @@ import 'data/services/api_service.dart';
 import 'data/services/storage_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/supabase_constants.dart';
-import 'data/repositories/auth_repository.dart';
+import 'data/repositories/auth_repository.dart' hide authRepositoryProvider;
 import 'presentation/providers/auth_provider.dart';
 import 'presentation/providers/branch_provider.dart';
 import 'presentation/providers/theme_provider.dart';
@@ -36,15 +36,19 @@ void main() async {
       '⚠️ WARNING: Supabase keys not set. Please update lib/core/config/supabase_constants.dart',
     );
   } else {
+    debugPrint('🔧 Initializing Supabase...');
+    debugPrint('   URL: ${SupabaseConstants.url}');
+    debugPrint('   Key length: ${SupabaseConstants.anonKey.length} chars');
     await Supabase.initialize(
       url: SupabaseConstants.url,
       anonKey: SupabaseConstants.anonKey,
     );
+    debugPrint('✅ Supabase initialized successfully!');
   }
 
   // TODO: Migration - ApiService will be replaced by SupabaseClient
   final apiService = ApiService(storageService);
-  final authRepository = AuthRepository(storageService);
+  final authRepository = AuthRepository(storageService, apiService);
 
   // Check initial theme preference
   final isDark = await storageService.isDarkModeEnabled();

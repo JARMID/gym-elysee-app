@@ -8,6 +8,7 @@ import '../../../core/utils/validators.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../providers/auth_provider.dart';
+import '../../../core/utils/error_handler.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -69,7 +70,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       } catch (e) {
         if (mounted) {
           setState(() {
-            _errorMessage = e.toString().replaceAll('Exception: ', '');
+            _errorMessage = ErrorHandler.getErrorMessage(context, e);
           });
         }
       } finally {
@@ -448,7 +449,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         color: Colors.black,
         image: DecorationImage(
           image: const NetworkImage(
-            'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1200',
+            'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop',
           ),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(

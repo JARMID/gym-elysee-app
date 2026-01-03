@@ -18,6 +18,8 @@ import 'admin_branches_screen.dart';
 import 'admin_payments_screen.dart';
 import 'admin_settings_screen.dart';
 import 'admin_analytics_screen.dart';
+import 'admin_scanner_screen.dart';
+import '../../widgets/common/notification_panel.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -38,7 +40,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
   List<Map<String, dynamic>> _getMenuItems(AppLocalizations l10n) => [
     {'icon': FontAwesomeIcons.chartLine, 'label': l10n.adminNavDashboard},
-    {'icon': FontAwesomeIcons.chartSimple, 'label': 'Analytics'},
+    {'icon': FontAwesomeIcons.chartSimple, 'label': l10n.adminNavAnalytics},
     {'icon': FontAwesomeIcons.users, 'label': l10n.adminNavMembers},
     {'icon': FontAwesomeIcons.userTie, 'label': l10n.adminNavCoaches},
     {'icon': FontAwesomeIcons.dumbbell, 'label': l10n.adminNavPrograms},
@@ -47,26 +49,24 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     {'icon': FontAwesomeIcons.gear, 'label': l10n.adminNavSettings},
   ];
 
-  String _getMenuTitle(int index) {
-    // Helper to get title based on index, defaulting to Dashboard
-    // In a real app, this could match the _getMenuItems list
+  String _getMenuTitle(AppLocalizations l10n, int index) {
     switch (index) {
       case 0:
-        return 'Dashboard';
+        return l10n.adminNavDashboard;
       case 1:
-        return 'Analytics';
+        return l10n.adminNavAnalytics;
       case 2:
-        return 'Members';
+        return l10n.adminNavMembers;
       case 3:
-        return 'Coaches';
+        return l10n.adminNavCoaches;
       case 4:
-        return 'Programs';
+        return l10n.adminNavPrograms;
       case 5:
-        return 'Branches';
+        return l10n.adminNavBranches;
       case 6:
-        return 'Payments';
+        return l10n.adminNavPayments;
       case 7:
-        return 'Settings';
+        return l10n.adminNavSettings;
       default:
         return 'Admin';
     }
@@ -122,7 +122,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 child: Column(
                   children: [
                     // Adaptive Header
-                    _buildHeader(isDark, !isDesktop),
+                    _buildHeader(isDark, !isDesktop, l10n),
 
                     // Content Body
                     Expanded(
@@ -353,7 +353,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildHeader(bool isDark, bool showHamburger) {
+  Widget _buildHeader(bool isDark, bool showHamburger, AppLocalizations l10n) {
     return Container(
       height: 70,
       padding: EdgeInsets.symmetric(horizontal: showHamburger ? 12 : 24),
@@ -402,7 +402,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
           // Title
           Expanded(
             child: Text(
-              _getMenuTitle(_selectedIndex),
+              _getMenuTitle(l10n, _selectedIndex),
               style: GoogleFonts.oswald(
                 fontSize: showHamburger ? 18 : 24,
                 fontWeight: FontWeight.bold,
@@ -424,7 +424,30 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   size: showHamburger ? 18 : 20,
                 ),
                 color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-                onPressed: () {},
+                onPressed: () {
+                  final screenWidth = MediaQuery.of(context).size.width;
+                  // On mobile, show close to right edge. On desktop, keep 400px fixed offset or appropriate alignment.
+                  // showMenu position is LTRB.
+                  // Use a safer calculation.
+                  final left = screenWidth > 400 ? screenWidth - 380 : 10.0;
+
+                  showMenu(
+                    context: context,
+                    position: RelativeRect.fromLTRB(left, 60, 10, 0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    color: Colors.transparent,
+                    elevation: 0,
+                    items: [
+                      PopupMenuItem(
+                        enabled: false,
+                        padding: EdgeInsets.zero,
+                        child: NotificationPanel(isDark: isDark),
+                      ),
+                    ],
+                  );
+                },
               ),
               Positioned(
                 right: 8,
@@ -503,28 +526,28 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   childAspectRatio: childAspectRatio,
                   children: [
                     _buildStatCard(
-                      'Total Members',
+                      l10n.adminStatTotalMembers,
                       '${stats['total_members']}',
                       FontAwesomeIcons.users,
                       Colors.blue,
                       isDark,
                     ),
                     _buildStatCard(
-                      'Active Today',
+                      l10n.adminStatActiveNow,
                       '${stats['today_bookings']}',
                       FontAwesomeIcons.calendarCheck,
                       Colors.green,
                       isDark,
                     ),
                     _buildStatCard(
-                      'Pending Payments',
+                      l10n.adminStatPendingPayments,
                       '${stats['pending_payments']}',
                       FontAwesomeIcons.moneyBill,
                       Colors.orange,
                       isDark,
                     ),
                     _buildStatCard(
-                      'Active Subscriptions',
+                      l10n.adminStatActiveSubscriptions,
                       '${stats['active_subscriptions']}',
                       FontAwesomeIcons.trophy,
                       Colors.purple,
@@ -542,7 +565,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
           // Quick Actions
           Text(
-            'Quick Actions',
+            l10n.adminSectionQuickActions,
             style: GoogleFonts.oswald(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -555,7 +578,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             runSpacing: 12,
             children: [
               _buildQuickActionButton(
-                'Add Member',
+                l10n.adminActionAddMember,
                 FontAwesomeIcons.userPlus,
                 Colors.blue,
                 isDark,
@@ -565,7 +588,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 ),
               ),
               _buildQuickActionButton(
-                'Record Payment',
+                l10n.adminActionValidatePayments,
                 FontAwesomeIcons.moneyBillWave,
                 Colors.green,
                 isDark,
@@ -575,7 +598,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 ),
               ),
               _buildQuickActionButton(
-                'Create Post',
+                l10n.adminActionCreatePost,
                 FontAwesomeIcons.penToSquare,
                 Colors.orange,
                 isDark,
@@ -585,11 +608,21 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 ),
               ),
               _buildQuickActionButton(
-                'View Reports',
+                l10n.adminActionViewReports,
                 FontAwesomeIcons.chartLine,
                 Colors.purple,
                 isDark,
                 () {},
+              ),
+              _buildQuickActionButton(
+                l10n.adminActionScanQR, // We might need to add this key or use hardcoded string for now
+                Icons.qr_code_scanner,
+                Colors.red,
+                isDark,
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AdminScannerScreen()),
+                ),
               ),
             ],
           ),
@@ -597,7 +630,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
           //Recent Activity
           Text(
-            'Recent Activity',
+            l10n.adminSectionRecentActivity,
             style: GoogleFonts.oswald(
               fontSize: 20,
               fontWeight: FontWeight.bold,

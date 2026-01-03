@@ -6,6 +6,8 @@ import '../../providers/coach_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../data/models/program_model.dart';
+import 'coach_settings_screen.dart';
+import '../../widgets/common/notification_panel.dart';
 
 class CoachDashboardScreen extends ConsumerWidget {
   const CoachDashboardScreen({super.key});
@@ -61,11 +63,71 @@ class CoachDashboardScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.logout, color: Colors.white),
-                  onPressed: () {
-                    ref.read(authNotifierProvider.notifier).logout();
-                  },
+                Row(
+                  children: [
+                    // Notification Bell
+                    IconButton(
+                      icon: Stack(
+                        children: [
+                          const Icon(
+                            Icons.notifications_outlined,
+                            color: Colors.white,
+                          ),
+                          Positioned(
+                            right: 0,
+                            top: 0,
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      onPressed: () {
+                        final screenWidth = MediaQuery.of(context).size.width;
+                        final left = screenWidth > 400
+                            ? screenWidth - 380
+                            : 10.0;
+                        showMenu(
+                          context: context,
+                          position: RelativeRect.fromLTRB(left, 60, 10, 0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          color: Colors.transparent,
+                          elevation: 0,
+                          items: [
+                            PopupMenuItem(
+                              enabled: false,
+                              padding: EdgeInsets.zero,
+                              child: NotificationPanel(isDark: isDark),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.settings, color: Colors.white),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CoachSettingsScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.logout, color: Colors.white),
+                      onPressed: () {
+                        ref.read(authNotifierProvider.notifier).logout();
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -110,127 +172,167 @@ class CoachDashboardScreen extends ConsumerWidget {
     final stats = data['stats'] as Map<String, dynamic>? ?? {};
     final upcomingBookings = data['upcoming_bookings'] as List? ?? [];
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // Stats Cards
-        Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 600;
+
+        return ListView(
+          padding: const EdgeInsets.all(16),
           children: [
-            Expanded(
-              child: _buildStatCard(
-                'Séances Aujourd\'hui',
-                stats['today_bookings']?.toString() ?? '0',
-                Icons.calendar_today,
-                isDark,
+            // Stats Cards - Wrap on mobile
+            if (isMobile)
+              Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatCard(
+                          'Séances',
+                          stats['today_bookings']?.toString() ?? '0',
+                          Icons.calendar_today,
+                          isDark,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildStatCard(
+                          'Élèves',
+                          stats['total_students']?.toString() ?? '0',
+                          Icons.people,
+                          isDark,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _buildStatCard(
+                    'Note',
+                    '${stats['rating'] ?? 0}⭐',
+                    Icons.star,
+                    isDark,
+                  ),
+                ],
+              )
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatCard(
+                      'Séances Aujourd\'hui',
+                      stats['today_bookings']?.toString() ?? '0',
+                      Icons.calendar_today,
+                      isDark,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildStatCard(
+                      'Total Élèves',
+                      stats['total_students']?.toString() ?? '0',
+                      Icons.people,
+                      isDark,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildStatCard(
+                      'Note',
+                      '${stats['rating'] ?? 0}⭐',
+                      Icons.star,
+                      isDark,
+                    ),
+                  ),
+                ],
+              ),
+
+            const SizedBox(height: 24),
+
+            // Quick Actions
+            Text(
+              'ACTIONS RAPIDES',
+              style: GoogleFonts.oswald(
+                color: AppColors.brandOrange,
+                fontSize: 14,
+                letterSpacing: 1,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard(
-                'Total Élèves',
-                stats['total_students']?.toString() ?? '0',
-                Icons.people,
-                isDark,
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildActionCard(
+                    context,
+                    'Mon Équipe',
+                    Icons.groups,
+                    () => _showSquadSheet(context, ref),
+                    isDark,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildActionCard(
+                    context,
+                    'Mes Programmes',
+                    Icons.fitness_center,
+                    () => _showProgramsSheet(context, ref),
+                    isDark,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildActionCard(
+                    context,
+                    'Mon Planning',
+                    Icons.calendar_month,
+                    () => _showScheduleSheet(context, ref),
+                    isDark,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildActionCard(
+                    context,
+                    'Mes Réservations',
+                    Icons.book_online,
+                    () => _showBookingsSheet(context, ref),
+                    isDark,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // Upcoming Bookings
+            Text(
+              'PROCHAINES SÉANCES',
+              style: GoogleFonts.oswald(
+                color: AppColors.brandOrange,
+                fontSize: 14,
+                letterSpacing: 1,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard(
-                'Note',
-                '${stats['rating'] ?? 0}⭐',
-                Icons.star,
-                isDark,
-              ),
-            ),
+            const SizedBox(height: 12),
+            if (upcomingBookings.isEmpty)
+              Card(
+                color: isDark ? Colors.grey[900] : Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'Aucune séance prévue',
+                    style: GoogleFonts.inter(color: Colors.grey),
+                  ),
+                ),
+              )
+            else
+              ...upcomingBookings.map((booking) => _buildBookingCard(booking)),
           ],
-        ),
-
-        const SizedBox(height: 24),
-
-        // Quick Actions
-        Text(
-          'ACTIONS RAPIDES',
-          style: GoogleFonts.oswald(
-            color: AppColors.brandOrange,
-            fontSize: 14,
-            letterSpacing: 1,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionCard(
-                context,
-                'Mon Équipe',
-                Icons.groups,
-                () => _showSquadSheet(context, ref),
-                isDark,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionCard(
-                context,
-                'Mes Programmes',
-                Icons.fitness_center,
-                () => _showProgramsSheet(context, ref),
-                isDark,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionCard(
-                context,
-                'Mon Planning',
-                Icons.calendar_month,
-                () => _showScheduleSheet(context, ref),
-                isDark,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionCard(
-                context,
-                'Mes Réservations',
-                Icons.book_online,
-                () => _showBookingsSheet(context, ref),
-                isDark,
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 24),
-
-        // Upcoming Bookings
-        Text(
-          'PROCHAINES SÉANCES',
-          style: GoogleFonts.oswald(
-            color: AppColors.brandOrange,
-            fontSize: 14,
-            letterSpacing: 1,
-          ),
-        ),
-        const SizedBox(height: 12),
-        if (upcomingBookings.isEmpty)
-          Card(
-            color: isDark ? Colors.grey[900] : Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'Aucune séance prévue',
-                style: GoogleFonts.inter(color: Colors.grey),
-              ),
-            ),
-          )
-        else
-          ...upcomingBookings.map((booking) => _buildBookingCard(booking)),
-      ],
+        );
+      },
     );
   }
 

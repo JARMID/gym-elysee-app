@@ -604,6 +604,8 @@
     "adminActionCreatePost": "Crear publicación",
     "adminActionValidatePayments": "Validar pagos",
     "adminActionModeratePosts": "Moderar publicaciones",
+    "adminActionViewReports": "Ver Informes",
+    "adminActionScanQR": "Escanear QR",
     
     "adminPlaceholderModule": "Módulo {module}",
     "adminComingSoon": "Próximamente",
@@ -730,5 +732,10 @@
     "adminDialogAmountLabel": "Cantidad: {amount} DZD",
     "adminDialogUserLabel": "Usuario: {user}",
     "adminDialogValidateButton": "Validar",
-    "adminDialogPaymentValidated": "Pago validado"
+    "adminDialogPaymentValidated": "Pago validado",
+    "authEmailInvalid": "Correo electrónico inválido. Por favor, use un proveedor real.",
+    "authRateLimit": "Demasiados intentos. Por favor espere.",
+    "authUserExists": "Esta cuenta ya existe.",
+    "authWeakPassword": "La contraseña es demasiado débil (min 6 caracteres).",
+    "authUnknown": "Ocurrió un error de autenticación."
 }

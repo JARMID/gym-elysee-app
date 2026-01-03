@@ -126,6 +126,21 @@ final routerProvider = Provider<GoRouter>((ref) {
         return AppRoutes.memberDashboard;
       }
 
+      // Role guards - prevent unauthorized access to role-specific routes
+      if (isAuthenticated) {
+        final userRole = authState.user?.type;
+
+        // Admin routes - only admins allowed
+        if (state.matchedLocation.startsWith('/admin') && userRole != 'admin') {
+          return AppRoutes.memberDashboard;
+        }
+
+        // Coach routes - only coaches allowed
+        if (state.matchedLocation.startsWith('/coach') && userRole != 'coach') {
+          return AppRoutes.memberDashboard;
+        }
+      }
+
       return null;
     },
     routes: [

@@ -16,6 +16,8 @@ class UserModel {
   @JsonKey(name: 'avatar_url')
   final String? photo;
   final String? qrCode;
+  final String? city;
+  final String? bio;
   final bool isActive;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -31,6 +33,8 @@ class UserModel {
     this.gender,
     this.photo,
     this.qrCode,
+    this.city,
+    this.bio,
     this.isActive = true,
     required this.createdAt,
     required this.updatedAt,

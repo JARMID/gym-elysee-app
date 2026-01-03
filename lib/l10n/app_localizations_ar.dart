@@ -1736,6 +1736,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adminNavPayments => 'الدفعات';
 
   @override
+  String get adminNavAnalytics => 'Analytics';
+
+  @override
   String get adminNavSettings => 'الإعدادات';
 
   @override
@@ -1743,6 +1746,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get adminStatActiveNow => 'نشط الآن';
+
+  @override
+  String get adminStatPendingPayments => 'Pending Payments';
+
+  @override
+  String get adminStatActiveSubscriptions => 'Active Subscriptions';
 
   @override
   String get adminStatRevenue => 'الإيرادات';
@@ -1770,6 +1779,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get adminActionModeratePosts => 'إدارة المنشورات';
+
+  @override
+  String get adminActionViewReports => 'View Reports';
+
+  @override
+  String get adminActionScanQR => 'Scan QR';
 
   @override
   String adminPlaceholderModule(Object module) {
@@ -2182,6 +2197,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsSectionSecurity => 'الأمان';
+
+  @override
+  String get authEmailInvalid =>
+      'بريد إلكتروني غير صالح. يرجى استخدام مزود حقيقي.';
+
+  @override
+  String get authRateLimit => 'محاولات كثيرة جداً. يرجى الانتظار.';
+
+  @override
+  String get authUserExists => 'هذا الحساب موجود بالفعل.';
+
+  @override
+  String get authWeakPassword => 'كلمة المرور ضعيفة جداً (على الأقل 6 أحرف).';
+
+  @override
+  String get authUnknown => 'حدث خطأ في المصادقة.';
 
   @override
   String get settingsEditProfile => 'تعديل الملف الشخصي';

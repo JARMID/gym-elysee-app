@@ -1776,13 +1776,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminNavPayments => 'Paiements';
 
   @override
+  String get adminNavAnalytics => 'Analytique';
+
+  @override
   String get adminNavSettings => 'Paramètres';
 
   @override
   String get adminStatTotalMembers => 'Total Membres';
 
   @override
-  String get adminStatActiveNow => 'Actifs maintenant';
+  String get adminStatActiveNow => 'Actifs aujourd\'hui';
+
+  @override
+  String get adminStatPendingPayments => 'Paiements en attente';
+
+  @override
+  String get adminStatActiveSubscriptions => 'Abonnements actifs';
 
   @override
   String get adminStatRevenue => 'Revenus';
@@ -1806,10 +1815,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminActionCreatePost => 'Créer un post';
 
   @override
-  String get adminActionValidatePayments => 'Valider paiements';
+  String get adminActionValidatePayments => 'Enregistrer paiement';
 
   @override
   String get adminActionModeratePosts => 'Modérer les posts';
+
+  @override
+  String get adminActionViewReports => 'Voir les rapports';
+
+  @override
+  String get adminActionScanQR => 'Scanner QR';
 
   @override
   String adminPlaceholderModule(Object module) {
@@ -2222,6 +2237,22 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsSectionSecurity => 'SÉCURITÉ';
+
+  @override
+  String get authEmailInvalid =>
+      'Adresse email invalide. Veuillez utiliser un fournisseur réel.';
+
+  @override
+  String get authRateLimit => 'Trop de tentatives. Veuillez patienter.';
+
+  @override
+  String get authUserExists => 'Ce compte existe déjà.';
+
+  @override
+  String get authWeakPassword => 'Mot de passe trop faible (min 6 caractères).';
+
+  @override
+  String get authUnknown => 'Une erreur d\'authentification est survenue.';
 
   @override
   String get settingsEditProfile => 'Modifier le profil';

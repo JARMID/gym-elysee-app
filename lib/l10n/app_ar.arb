@@ -759,5 +759,10 @@
     "settingsThemeDark": "الوضع المظلم",
     "settingsThemeLight": "الوضع الفاتح",
     "settingsLanguage": "اللغة",
-    "settingsNotifications": "الإشعارات"
+    "settingsNotifications": "الإشعارات",
+    "authEmailInvalid": "بريد إلكتروني غير صالح. يرجى استخدام مزود حقيقي.",
+    "authRateLimit": "محاولات كثيرة جداً. يرجى الانتظار.",
+    "authUserExists": "هذا الحساب موجود بالفعل.",
+    "authWeakPassword": "كلمة المرور ضعيفة جداً (على الأقل 6 أحرف).",
+    "authUnknown": "حدث خطأ في المصادقة."
 }

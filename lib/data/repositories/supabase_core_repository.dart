@@ -248,7 +248,7 @@ class SupabaseCoreRepository {
   /// Get current user's active subscription
   Future<Map<String, dynamic>?> getMySubscription() async {
     final userId = _client.auth.currentUser?.id;
-    if (userId == null) throw const AuthException();
+    if (userId == null) return null;
 
     try {
       final response = await _client

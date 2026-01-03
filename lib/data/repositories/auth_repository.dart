@@ -1,16 +1,29 @@
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import '../../core/errors/exceptions.dart';
 import '../models/user_model.dart';
 import '../services/storage_service.dart';
+import '../services/api_service.dart';
+import '../../presentation/providers/branch_provider.dart';
+
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  return AuthRepository(
+    ref.read(storageServiceProvider),
+    ref.read(apiServiceProvider),
+  );
+});
 
 class AuthRepository {
   final StorageService _storageService;
+  final ApiService _apiService;
 
-  AuthRepository(this._storageService);
+  AuthRepository(this._storageService, this._apiService);
 
   Future<UserModel> login(String email, String password) async {
     try {
+      // 1. Login with Supabase
       final response = await sb.Supabase.instance.client.auth
           .signInWithPassword(email: email, password: password);
 
@@ -21,74 +34,120 @@ class AuthRepository {
         throw const AuthException();
       }
 
-      // Fetch Profile Data from 'profiles' table to construct UserModel
-      final profileData = await sb.Supabase.instance.client
-          .from('profiles')
-          .select()
-          .eq('id', user.id)
-          .single();
+      // 2. Exchange Token with Backend to get Sanctum Token
+      // This ensures we are authenticated in the Laravel backend
+      final exchangeResponse = await _apiService.post(
+        '/auth/exchange',
+        options: Options(
+          headers: {'Authorization': 'Bearer ${session.accessToken}'},
+        ),
+      );
 
-      final userModel = UserModel.fromJson(profileData);
+      final sanctumToken = exchangeResponse.data['token'];
+      final backendUser = exchangeResponse.data['user'];
 
-      // Save token for legacy compatibility
-      await _storageService.saveAccessToken(session.accessToken);
+      // 3. Save Sanctum Token for API calls
+      await _storageService.saveAccessToken(sanctumToken);
       if (session.refreshToken != null) {
         await _storageService.saveRefreshToken(session.refreshToken!);
       }
+
+      // 4. Construct User Model from Backend Data
+      // Mapping 'type' -> 'role', 'photo' -> 'avatar_url', int id -> String id
+      final userModel = UserModel.fromJson({
+        ...backendUser,
+        'role': backendUser['type'],
+        'id': backendUser['id'].toString(),
+        'avatar_url': backendUser['photo'],
+      });
+
       await _storageService.saveUserData(userModel.toJson().toString());
 
       return userModel;
     } catch (e) {
       if (e is sb.AuthException) {
-        rethrow;
+        if (e.message.toLowerCase().contains('invalid login credentials')) {
+          throw const AuthException(AuthErrorCode.invalidCredentials);
+        }
+        throw AuthException(AuthErrorCode.unknown, e.message);
       }
-      throw const AuthException();
+      // Handle Dio errors from exchange
+      throw const AuthException(AuthErrorCode.unknown);
     }
   }
 
   Future<UserModel> register(Map<String, dynamic> data) async {
     try {
+      // 1. Sign Up with Supabase
       final response = await sb.Supabase.instance.client.auth.signUp(
         email: data['email'],
         password: data['password'],
         data: {
           'first_name': data['first_name'],
           'last_name': data['last_name'],
-          // 'role': 'member', // Handled by Database Trigger
+          'phone': data['phone'],
         },
       );
 
       final user = response.user;
-      final session =
-          response.session; // Might be null if email confirmation enabled
+      final session = response.session;
 
       if (user == null) {
         throw const AuthException();
       }
 
-      // If session exists (no email confirm needed), save session
+      // 2. If we have a session (auto-login), exchange token immediately
       if (session != null) {
-        await _storageService.saveAccessToken(session.accessToken);
+        final exchangeResponse = await _apiService.post(
+          '/auth/exchange',
+          options: Options(
+            headers: {'Authorization': 'Bearer ${session.accessToken}'},
+          ),
+        );
+
+        final sanctumToken = exchangeResponse.data['token'];
+        final backendUser = exchangeResponse.data['user'];
+
+        await _storageService.saveAccessToken(sanctumToken);
+
+        final userModel = UserModel.fromJson({
+          ...backendUser,
+          'role': backendUser['type'],
+          'id': backendUser['id'].toString(),
+          'avatar_url': backendUser['photo'],
+        });
+
+        await _storageService.saveUserData(userModel.toJson().toString());
+        return userModel;
+      } else {
+        // Email confirmation required case - return partial model
+        // Or handle as pending
+        throw const AuthException(
+          AuthErrorCode.unknown,
+          "Email confirmation required",
+        );
+      }
+    } catch (e) {
+      if (e is sb.AuthException) {
+        if (e is sb.AuthApiException) {
+          switch (e.code) {
+            case 'email_address_invalid':
+              throw const AuthException(AuthErrorCode.emailInvalid);
+            case 'over_email_send_rate_limit':
+              throw const AuthException(AuthErrorCode.rateLimit);
+            case 'user_already_exists':
+              throw const AuthException(AuthErrorCode.userExists);
+            default:
+              if (e.statusCode == '400' && e.message.contains('password')) {
+                throw const AuthException(AuthErrorCode.weakPassword);
+              }
+          }
+        }
+        throw AuthException(AuthErrorCode.unknown, e.message);
       }
 
-      // Construct Initial User Model (Profile trigger might take a ms, so use local data)
-      final tempUser = UserModel(
-        id: user.id,
-        type: 'member',
-        firstName: data['first_name'],
-        lastName: data['last_name'],
-        email: user.email!,
-        phone: null,
-        isActive: true,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-
-      await _storageService.saveUserData(tempUser.toJson().toString());
-
-      return tempUser;
-    } catch (e) {
-      throw const AuthException(); // Wrap Supabase exception
+      debugPrint('Registration Error: $e');
+      throw AuthException(AuthErrorCode.unknown, e.toString());
     }
   }
 
@@ -100,19 +159,61 @@ class AuthRepository {
     }
   }
 
+  Future<void> deleteAccount() async {
+    try {
+      // 1. Delete from Laravel Backend (Data)
+      await _apiService.delete('/auth/me');
+    } catch (e) {
+      debugPrint('Warning: Backend deletion failed: $e');
+      // Continue to Supabase logout anyway
+    } finally {
+      // 2. Logout from Supabase (We can't delete Supabase user without Admin Key)
+      await logout();
+    }
+  }
+
   Future<UserModel> getCurrentUser() async {
     final user = sb.Supabase.instance.client.auth.currentUser;
     if (user == null) throw const AuthException();
 
     try {
-      final profileData = await sb.Supabase.instance.client
+      // Use maybeSingle() to return null instead of throwing if not found
+      Map<String, dynamic>? profileData = await sb.Supabase.instance.client
           .from('profiles')
           .select()
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
+
+      // Lazy creation if profile is missing
+      if (profileData == null) {
+        // Attempt to create it again (best effort)
+        final now = DateTime.now().toUtc();
+        final metadata = user.userMetadata ?? {};
+
+        final newProfile = {
+          'id': user.id,
+          'email': user.email,
+          'first_name': metadata['first_name'] ?? 'Membre',
+          'last_name': metadata['last_name'] ?? '',
+          'role': 'member',
+          'created_at': now.toIso8601String(),
+          'updated_at': now.toIso8601String(),
+        };
+
+        try {
+          await sb.Supabase.instance.client.from('profiles').upsert(newProfile);
+          profileData = newProfile;
+        } catch (e) {
+          debugPrint('Warning: Lazy profile creation failed: $e');
+          // Fallback to ephemeral model so UI doesn't crash
+          profileData = newProfile;
+        }
+      }
 
       return UserModel.fromJson(profileData);
     } catch (e) {
+      // If even the fallback fails, throw ServerException but logged
+      debugPrint('Error in getCurrentUser: $e');
       throw const ServerException();
     }
   }
@@ -179,8 +280,9 @@ class AuthRepository {
       if (phone != null) updates['phone'] = phone;
       if (gender != null) updates['gender'] = gender;
       if (bio != null) updates['bio'] = bio;
-      if (birthDate != null)
+      if (birthDate != null) {
         updates['birth_date'] = birthDate.toIso8601String().split('T').first;
+      }
 
       await sb.Supabase.instance.client
           .from('profiles')

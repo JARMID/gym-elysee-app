@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -29,28 +28,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
       setState(() => _isUploading = true);
 
-      final File file = File(image.path);
-      // Determine member ID from auth state or user object?
-      // Actually MemberRepository.updateProfile requires ID?
-      // The backend method I added uses user() to get member, so ID might be ignored or used for route?
-      // Backend: Route::post('/profile', [MemberController::class, 'updateProfile']);
-      // The updateProfile uses $request->user(), so it doesn't need ID in URL.
-      // But MemberRepository.updateProfile(int memberId, ...) signature might need update or I pass generic ID.
-      // Let's check MemberRepository signature.
-
-      // MemberRepository.updateProfile expects (int memberId, Map data, File photo).
-      // Since I changed the backend to use /member/profile (self update), the memberId might be redundant if the repo uses that route.
-      // PROCEEDING assuming Repo uses the route I set. I'll pass 0 as dummy ID if needed or fix repo.
-
-      // Ideally we should have memberId, but if the route is /profile, maybe it's fine.
-
-      await ref
-          .read(memberRepositoryProvider)
-          .updateProfile(
-            0, // Dummy ID, ignored by /member/profile route
-            {}, // No text data update, just photo
-            file,
-          );
+      await ref.read(memberRepositoryProvider).updateProfile(0, {}, image);
 
       // Refresh user data
       await ref.read(authNotifierProvider.notifier).checkAuth();

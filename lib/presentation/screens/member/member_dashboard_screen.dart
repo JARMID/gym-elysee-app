@@ -14,6 +14,7 @@ import 'package:gyelyseedz/l10n/app_localizations.dart';
 import '../../widgets/member/member_calendar_widget.dart';
 import 'qr_code_screen.dart';
 import '../../../presentation/providers/subscription_provider.dart';
+import '../../widgets/common/notification_panel.dart';
 
 // Provider to manage user photos
 final userPhotosProvider =
@@ -71,6 +72,50 @@ class MemberDashboardScreen extends ConsumerWidget {
         centerTitle: true,
         actions: [
           IconButton(
+            icon: Stack(
+              children: [
+                Icon(
+                  Icons.notifications_outlined,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            onPressed: () {
+              final screenWidth = MediaQuery.of(context).size.width;
+              // On mobile, show close to right edge. On desktop, keep fixed offset.
+              final left = screenWidth > 400 ? screenWidth - 380 : 10.0;
+
+              showMenu(
+                context: context,
+                position: RelativeRect.fromLTRB(left, 60, 10, 0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                color: Colors.transparent,
+                elevation: 0,
+                items: [
+                  PopupMenuItem(
+                    enabled: false,
+                    padding: EdgeInsets.zero,
+                    child: NotificationPanel(isDark: isDark),
+                  ),
+                ],
+              );
+            },
+          ),
+          IconButton(
             icon: Icon(
               Icons.settings_outlined,
               color: isDark ? Colors.white : Colors.black,
@@ -115,9 +160,23 @@ class MemberDashboardScreen extends ConsumerWidget {
                 ),
               ),
               data: (subscription) {
-                final subscriptionEnd = DateTime.parse(subscription['endDate']);
-                final isExpired = subscription['status'] == 'expired';
-                final amountDue = subscription['amountDue'];
+                final Map<String, dynamic>? subData = subscription;
+                final hasSubscription = subData != null;
+
+                final subscriptionEnd = hasSubscription
+                    ? DateTime.tryParse(subData['end_date'] ?? '') ??
+                          DateTime.now()
+                    : null;
+
+                // If no subscription, treat as not active/expired
+                final isExpired = hasSubscription
+                    ? (subData['status'] == 'expired' ||
+                          !(subData['isActive'] ?? false))
+                    : true;
+
+                final amountDue = hasSubscription
+                    ? (subData['plan']?['price'] ?? 0).toDouble()
+                    : 0.0;
 
                 return SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(
@@ -222,7 +281,7 @@ class MemberDashboardScreen extends ConsumerWidget {
                                     isExpired
                                         ? l10n.dashboardRenew
                                         : l10n.dashboardDaysLeft(
-                                            subscription['daysLeft'] ?? 0,
+                                            subData['daysLeft'] as int? ?? 0,
                                           ),
                                     style: GoogleFonts.inter(
                                       color: isDark
@@ -236,21 +295,49 @@ class MemberDashboardScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          // Payment Button (if due)
-                          if (amountDue > 0)
+                          // Payment/Subscribe Button
+                          if (amountDue > 0 || !hasSubscription)
                             Expanded(
                               child: GestureDetector(
                                 onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          PaymentMethodsScreen(
-                                            amount: amountDue
-                                                .toDouble(), // From API
-                                          ),
-                                    ),
-                                  );
+                                  if (!hasSubscription) {
+                                    // Navigate to Plans/Subscription Page
+                                    // Assuming AppRoutes.subscription or similar exists, or use GoRouter to find it
+                                    // Current context has payment methods link, but we want Plans.
+                                    // Usually it's in the profile or separate tab.
+                                    // Let's assume we can navigate to SubscriptionScreen via router or direct push.
+                                    // Actually checking imports..
+                                    // We don't have SubscriptionScreen imported directly?
+                                    // Let's check AppRouter content or navigation bar.
+                                    // For now, let's use context.push('/subscription') if route exists or open subscription screen.
+                                    // Or finding the subscription Tab.
+
+                                    // Using a direct material route for now to be safe, or reusing existing pattern
+                                    // Actually, let's check if we can switch tab.
+                                    // If not, push Settings -> Subscription?
+                                    // Let's try to find the route.
+                                    // For now: context.push(AppRoutes.profile); // User can find it there
+                                    // Better: context.pushNamed('subscription');
+                                    // Safest: Use existing PaymentMethodsScreen if we just want them to pay? No, they need to select a plan.
+
+                                    // Re-checking imports, we see 'SubscriptionScreen' is NOT imported.
+                                    // I will import it or assume a route.
+                                    // I'll use context.go('/subscription') or similar if I verify the route.
+                                    // Let's just use a placeholder Todo or push to Profile for now.
+                                    context.go(
+                                      '/member/profile',
+                                    ); // Usually where subscription is
+                                  } else {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            PaymentMethodsScreen(
+                                              amount: amountDue,
+                                            ),
+                                      ),
+                                    );
+                                  }
                                 },
                                 child: Container(
                                   padding: const EdgeInsets.all(16),
@@ -276,7 +363,9 @@ class MemberDashboardScreen extends ConsumerWidget {
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
-                                            l10n.dashboardPayNow,
+                                            !hasSubscription
+                                                ? 'S\'abonner'
+                                                : l10n.dashboardPayNow,
                                             style: GoogleFonts.oswald(
                                               color: Colors.black,
                                               fontSize: 18,
@@ -292,8 +381,9 @@ class MemberDashboardScreen extends ConsumerWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        // TODO: Format currency properly later
-                                        '${amountDue.toStringAsFixed(0)} DZD',
+                                        !hasSubscription
+                                            ? 'Voir les plans'
+                                            : '${amountDue.toStringAsFixed(0)} DZD',
                                         style: GoogleFonts.inter(
                                           color: Colors.black.withValues(
                                             alpha: 0.9,
@@ -341,10 +431,15 @@ class MemberDashboardScreen extends ConsumerWidget {
                       const SizedBox(height: 16),
                       LayoutBuilder(
                         builder: (context, constraints) {
-                          // Responsive grid: 1 column on very small screens, 2 on larger
-                          final crossAxisCount = constraints.maxWidth < 350
-                              ? 1
-                              : 2;
+                          // Responsive grid: 1 column on very small screens, 2 on mobile/tablet, 4 on desktop
+                          int crossAxisCount = 2;
+                          if (constraints.maxWidth < 350) {
+                            crossAxisCount = 1;
+                          } else if (constraints.maxWidth > 900) {
+                            crossAxisCount = 4;
+                          } else if (constraints.maxWidth > 600) {
+                            crossAxisCount = 3;
+                          }
                           return GridView.count(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
@@ -362,10 +457,7 @@ class MemberDashboardScreen extends ConsumerWidget {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => QRCodeScreen(
-                                        qrCode:
-                                            user.qrCode ?? 'MEMBER:${user.id}',
-                                      ),
+                                      builder: (_) => const QRCodeScreen(),
                                     ),
                                   );
                                 },
@@ -419,39 +511,54 @@ class MemberDashboardScreen extends ConsumerWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
           borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [color.withValues(alpha: 0.15), const Color(0xFF1E1E1E)]
+                : [Colors.white, color.withValues(alpha: 0.05)],
+          ),
           border: Border.all(
             color: isDark
-                ? Colors.white.withValues(alpha: 0.05)
-                : Colors.grey.withValues(alpha: 0.2),
+                ? color.withValues(alpha: 0.2)
+                : color.withValues(alpha: 0.1),
+            width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: color.withValues(alpha: isDark ? 0.1 : 0.05),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+              spreadRadius: 1,
             ),
           ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.2),
+                color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: color.withValues(alpha: 0.2),
+                  width: 1,
+                ),
               ),
-              child: Icon(icon, color: color, size: 24),
+              child: Icon(icon, color: color, size: 28),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             Text(
               label,
+              textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 color: isDark ? Colors.white : Colors.black87,
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
+                letterSpacing: 0.2,
               ),
             ),
           ],

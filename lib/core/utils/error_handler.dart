@@ -15,7 +15,22 @@ class ErrorHandler {
       return l10n.errorServer;
     }
 
-    if (error is AuthException || error is AuthFailure) {
+    if (error is AuthException) {
+      switch (error.code) {
+        case AuthErrorCode.emailInvalid:
+          return l10n.authEmailInvalid;
+        case AuthErrorCode.rateLimit:
+          return l10n.authRateLimit;
+        case AuthErrorCode.userExists:
+          return l10n.authUserExists;
+        case AuthErrorCode.weakPassword:
+          return l10n.authWeakPassword;
+        default:
+          return error.message ?? l10n.errorAuth;
+      }
+    }
+
+    if (error is AuthFailure) {
       return l10n.errorAuth;
     }
 

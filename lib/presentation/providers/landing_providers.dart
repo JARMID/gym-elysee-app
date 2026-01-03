@@ -1,7 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/network/dio_provider.dart'; // Assuming this exists
+import '../../core/network/dio_provider.dart';
 import '../../data/repositories/landing_repository.dart';
 import '../../data/models/branch_model.dart';
+import 'branch_provider.dart'; // For supabaseCoreRepositoryProvider
 
 final landingRepositoryProvider = Provider<LandingRepository>((ref) {
   final dio = ref.read(dioProvider);
@@ -9,7 +10,9 @@ final landingRepositoryProvider = Provider<LandingRepository>((ref) {
 });
 
 final branchesProvider = FutureProvider<List<BranchModel>>((ref) async {
-  return ref.read(landingRepositoryProvider).getBranches();
+  // Switched to Supabase
+  final repo = ref.watch(supabaseCoreRepositoryProvider);
+  return repo.getBranches();
 });
 
 // State provider for Ramadan mode
@@ -20,5 +23,7 @@ final featuredCoachesProvider = FutureProvider<List<dynamic>>((ref) async {
 });
 
 final membershipPlansProvider = FutureProvider<List<dynamic>>((ref) async {
-  return ref.read(landingRepositoryProvider).getMembershipPlans();
+  // Switched to Supabase
+  final repo = ref.watch(supabaseCoreRepositoryProvider);
+  return repo.getMembershipPlans();
 });

@@ -3458,6 +3458,12 @@ abstract class AppLocalizations {
   /// **'Payments'**
   String get adminNavPayments;
 
+  /// No description provided for @adminNavAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Analytics'**
+  String get adminNavAnalytics;
+
   /// No description provided for @adminNavSettings.
   ///
   /// In en, this message translates to:
@@ -3473,8 +3479,20 @@ abstract class AppLocalizations {
   /// No description provided for @adminStatActiveNow.
   ///
   /// In en, this message translates to:
-  /// **'Active Now'**
+  /// **'Active Today'**
   String get adminStatActiveNow;
+
+  /// No description provided for @adminStatPendingPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending Payments'**
+  String get adminStatPendingPayments;
+
+  /// No description provided for @adminStatActiveSubscriptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Subscriptions'**
+  String get adminStatActiveSubscriptions;
 
   /// No description provided for @adminStatRevenue.
   ///
@@ -3509,7 +3527,7 @@ abstract class AppLocalizations {
   /// No description provided for @adminActionAddMember.
   ///
   /// In en, this message translates to:
-  /// **'Add New Member'**
+  /// **'Add Member'**
   String get adminActionAddMember;
 
   /// No description provided for @adminActionCreatePost.
@@ -3521,7 +3539,7 @@ abstract class AppLocalizations {
   /// No description provided for @adminActionValidatePayments.
   ///
   /// In en, this message translates to:
-  /// **'Validate Payments'**
+  /// **'Record Payment'**
   String get adminActionValidatePayments;
 
   /// No description provided for @adminActionModeratePosts.
@@ -3529,6 +3547,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Moderate Posts'**
   String get adminActionModeratePosts;
+
+  /// No description provided for @adminActionViewReports.
+  ///
+  /// In en, this message translates to:
+  /// **'View Reports'**
+  String get adminActionViewReports;
+
+  /// No description provided for @adminActionScanQR.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan QR'**
+  String get adminActionScanQR;
 
   /// No description provided for @adminPlaceholderModule.
   ///
@@ -4267,6 +4297,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'SECURITY'**
   String get settingsSectionSecurity;
+
+  /// No description provided for @authEmailInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email address. Please use a real provider.'**
+  String get authEmailInvalid;
+
+  /// No description provided for @authRateLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Please wait a moment.'**
+  String get authRateLimit;
+
+  /// No description provided for @authUserExists.
+  ///
+  /// In en, this message translates to:
+  /// **'Account already exists.'**
+  String get authUserExists;
+
+  /// No description provided for @authWeakPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password is too weak. Must be at least 6 characters.'**
+  String get authWeakPassword;
+
+  /// No description provided for @authUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'An authentication error occurred.'**
+  String get authUnknown;
 
   /// No description provided for @settingsEditProfile.
   ///

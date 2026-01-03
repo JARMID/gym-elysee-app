@@ -104,8 +104,12 @@ class MemberCardWidget extends StatelessWidget {
                       : null,
                   child: user.photo == null
                       ? Text(
-                          user.firstName[0].toUpperCase() +
-                              user.lastName[0].toUpperCase(),
+                          (user.firstName.isNotEmpty
+                                  ? user.firstName[0].toUpperCase()
+                                  : '') +
+                              (user.lastName.isNotEmpty
+                                  ? user.lastName[0].toUpperCase()
+                                  : ''),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -144,11 +148,9 @@ class MemberCardWidget extends StatelessWidget {
             // QR Code Section
             GestureDetector(
               onTap: () {
-                if (user.qrCode != null) {
+                if (true) {
                   Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => QRCodeScreen(qrCode: user.qrCode!),
-                    ),
+                    MaterialPageRoute(builder: (_) => const QRCodeScreen()),
                   );
                 }
               },
@@ -161,31 +163,18 @@ class MemberCardWidget extends StatelessWidget {
                 child: Row(
                   children: [
                     // QR Code
-                    if (user.qrCode != null)
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.all(4),
-                        child: QrImageView(
-                          data: user.qrCode!,
-                          size: 72,
-                          backgroundColor: Colors.white,
-                        ),
-                      )
-                    else
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Center(
-                          child: Icon(Icons.qr_code, color: Colors.grey),
-                        ),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
                       ),
+                      padding: const EdgeInsets.all(4),
+                      child: QrImageView(
+                        data: user.qrCode ?? 'MEMBER:${user.id}',
+                        size: 72,
+                        backgroundColor: Colors.white,
+                      ),
+                    ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(

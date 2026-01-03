@@ -146,16 +146,15 @@ class AdminRepository {
   }
 
   Future<void> deleteProgram(int programId) async {
-    await _apiService.delete('${ApiConstants.programs}/$programId');
+    await _apiService.delete('${ApiConstants.adminPrograms}/$programId');
   }
 
   Future<void> createProgram(Map<String, dynamic> data) async {
-    await _apiService.post(ApiConstants.programs, data: data);
+    await _apiService.post(ApiConstants.adminPrograms, data: data);
   }
 
   Future<void> updateProgram(int id, Map<String, dynamic> data) async {
-    // Assuming PUT /programs/{id}
-    await _apiService.put('${ApiConstants.programs}/$id', data: data);
+    await _apiService.put('${ApiConstants.adminPrograms}/$id', data: data);
   }
 
   // Branches

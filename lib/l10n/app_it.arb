@@ -604,6 +604,8 @@
     "adminActionCreatePost": "Crea post",
     "adminActionValidatePayments": "Convalida pagamenti",
     "adminActionModeratePosts": "Modera post",
+    "adminActionViewReports": "Vedi Report",
+    "adminActionScanQR": "Scansiona QR",
     
     "adminPlaceholderModule": "Modulo {module}",
     "adminComingSoon": "In arrivo",
@@ -730,5 +732,10 @@
     "adminDialogAmountLabel": "Importo: {amount} DZD",
     "adminDialogUserLabel": "Utente: {user}",
     "adminDialogValidateButton": "Convalida",
-    "adminDialogPaymentValidated": "Pagamento convalidato"
+    "adminDialogPaymentValidated": "Pagamento convalidato",
+    "authEmailInvalid": "Indirizzo email non valido. Si prega di utilizzare un provider reale.",
+    "authRateLimit": "Troppi tentativi. Si prega di attendere.",
+    "authUserExists": "Questo account esiste già.",
+    "authWeakPassword": "La password è troppo debole (min 6 caratteri).",
+    "authUnknown": "Si è verificato un errore di autenticazione."
 }

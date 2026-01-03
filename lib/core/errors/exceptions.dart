@@ -42,6 +42,17 @@ class SubscriptionException extends AppException {
   const SubscriptionException([super.message]);
 }
 
+enum AuthErrorCode {
+  emailInvalid,
+  rateLimit,
+  userExists,
+  weakPassword,
+  invalidCredentials,
+  networkError,
+  unknown,
+}
+
 class AuthException extends AppException {
-  const AuthException([super.message]);
+  final AuthErrorCode code;
+  const AuthException([this.code = AuthErrorCode.unknown, super.message]);
 }

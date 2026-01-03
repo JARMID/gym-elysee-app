@@ -180,7 +180,7 @@ List<BlogArticle> blogArticles = [
     author: 'Coach Karim',
     date: '05 Décembre 2024',
     imageUrl:
-        'https://images.unsplash.com/photo-1544367563-12123d8965cd?q=80&w=2070&auto=format&fit=crop', // Matches existing card image
+        'https://images.unsplash.com/photo-1599058945522-28d584b6f0ff?q=80&w=2069&auto=format&fit=crop', // Replaced broken link
     content: [
       BlogContentBlock(type: BlogBlockType.heading, text: "Introduction"),
       BlogContentBlock(

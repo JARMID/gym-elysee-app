@@ -1763,13 +1763,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminNavPayments => 'Payments';
 
   @override
+  String get adminNavAnalytics => 'Analytics';
+
+  @override
   String get adminNavSettings => 'Settings';
 
   @override
   String get adminStatTotalMembers => 'Total Members';
 
   @override
-  String get adminStatActiveNow => 'Active Now';
+  String get adminStatActiveNow => 'Active Today';
+
+  @override
+  String get adminStatPendingPayments => 'Pending Payments';
+
+  @override
+  String get adminStatActiveSubscriptions => 'Active Subscriptions';
 
   @override
   String get adminStatRevenue => 'Revenue';
@@ -1787,16 +1796,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminSectionQuickActions => 'Quick Actions';
 
   @override
-  String get adminActionAddMember => 'Add New Member';
+  String get adminActionAddMember => 'Add Member';
 
   @override
   String get adminActionCreatePost => 'Create Post';
 
   @override
-  String get adminActionValidatePayments => 'Validate Payments';
+  String get adminActionValidatePayments => 'Record Payment';
 
   @override
   String get adminActionModeratePosts => 'Moderate Posts';
+
+  @override
+  String get adminActionViewReports => 'View Reports';
+
+  @override
+  String get adminActionScanQR => 'Scan QR';
 
   @override
   String adminPlaceholderModule(Object module) {
@@ -2209,6 +2224,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsSectionSecurity => 'SECURITY';
+
+  @override
+  String get authEmailInvalid =>
+      'Invalid email address. Please use a real provider.';
+
+  @override
+  String get authRateLimit => 'Too many attempts. Please wait a moment.';
+
+  @override
+  String get authUserExists => 'Account already exists.';
+
+  @override
+  String get authWeakPassword =>
+      'Password is too weak. Must be at least 6 characters.';
+
+  @override
+  String get authUnknown => 'An authentication error occurred.';
 
   @override
   String get settingsEditProfile => 'Edit Profile';

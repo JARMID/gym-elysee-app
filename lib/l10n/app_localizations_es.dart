@@ -1767,6 +1767,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get adminNavPayments => 'Pagos';
 
   @override
+  String get adminNavAnalytics => 'Analytics';
+
+  @override
   String get adminNavSettings => 'Ajustes';
 
   @override
@@ -1774,6 +1777,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get adminStatActiveNow => 'Activos ahora';
+
+  @override
+  String get adminStatPendingPayments => 'Pending Payments';
+
+  @override
+  String get adminStatActiveSubscriptions => 'Active Subscriptions';
 
   @override
   String get adminStatRevenue => 'Ingresos';
@@ -1801,6 +1810,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get adminActionModeratePosts => 'Moderar publicaciones';
+
+  @override
+  String get adminActionViewReports => 'Ver Informes';
+
+  @override
+  String get adminActionScanQR => 'Escanear QR';
 
   @override
   String adminPlaceholderModule(Object module) {
@@ -2214,6 +2229,23 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsSectionSecurity => 'SECURITY';
+
+  @override
+  String get authEmailInvalid =>
+      'Correo electrónico inválido. Por favor, use un proveedor real.';
+
+  @override
+  String get authRateLimit => 'Demasiados intentos. Por favor espere.';
+
+  @override
+  String get authUserExists => 'Esta cuenta ya existe.';
+
+  @override
+  String get authWeakPassword =>
+      'La contraseña es demasiado débil (min 6 caracteres).';
+
+  @override
+  String get authUnknown => 'Ocurrió un error de autenticación.';
 
   @override
   String get settingsEditProfile => 'Edit Profile';
